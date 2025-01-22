@@ -51,7 +51,7 @@ async function createJR(req, res) {
         });
 
     } catch (error) {
-        console.error("Error creating mission statement:", error.message);
+        console.error("Error creating Job Requirement:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }

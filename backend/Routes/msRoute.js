@@ -25,7 +25,7 @@ const uploadMiddleware = upload.fields([
 // Define the route with the middleware
 router.post("/create", uploadMiddleware, createMS);
 
-router.put("/:job_id/update", uploadMiddleware, async (req, res) => {
+router.put("/:obj_id/update", uploadMiddleware, async (req, res) => {
    await MSUpdate(req, res);
 });
 
@@ -37,7 +37,7 @@ router.get('/:job_id', async (req, res) => {
    await getMSById(req, res);
 });
 
-router.delete('/:job_id/delete', async (req, res) => {
+router.delete('/:obj_id/delete', async (req, res) => {
    await deleteMS(req, res);
 });
 

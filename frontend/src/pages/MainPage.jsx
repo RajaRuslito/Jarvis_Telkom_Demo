@@ -292,7 +292,7 @@ const MainPage = () => {
                 className={`cursor-pointer flex items-center p-2 rounded-md bg-blue-500`}
                 onClick={() => window.location.href = "/"}
               >
-                {!collapsed && <span className="ml-4">Main</span>}
+                {!collapsed && <span className="ml-4">Manage DJM</span>}
               </li>
               <li className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
                 onClick={() => window.location.href = "/profile"}
@@ -339,19 +339,23 @@ const MainPage = () => {
               <div className='w-full flex justify-between items-center'>
                 <div>
                   <p className='text-black font-semibold text-xl'>{activeMenu.title} DJM</p>
-                  <div className='flex gap-3 mt-5'>
-                    <button
-                      className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
-                      onClick={() => setCreateModalOpened(true)}
-                    >
-                      Create
-                    </button>
-                    <button
-                      className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
-                      onClick={() => document.getElementById('fileUpload').click()}
-                    >
-                      Upload
-                    </button>
+                  <div className='flex gap-2 mt-5'>
+                  {(accountData.roles === "Admin" || accountData.roles === "Super Admin") && (
+                    <div className='flex gap-2'>                    
+                      <button
+                        className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
+                        onClick={() => setCreateModalOpened(true)}
+                      >
+                        Create
+                      </button>
+                      <button
+                        className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
+                        onClick={() => document.getElementById('fileUpload').click()}
+                      >
+                        Upload
+                      </button>
+                    </div>
+                  )}
                     <button
                       className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
                       onClick={handleFileDownloadTemplate}
@@ -410,7 +414,9 @@ const MainPage = () => {
                     <thead className='bg-gray-300'>
                       <tr>
                         <th className='px-4 py-2 border-b text-left font-semibold'>No.</th>
-                        <th className='px-4 py-2 border-b text-left font-semibold'>Action</th>
+                        {accountData?.roles !== 'User' && (
+                          <th className='px-4 py-2 border-b text-left font-semibold'>Action</th>
+                        )}
                         <th className='px-4 py-2 border-b text-left font-semibold'>Nama Job</th>
                         <th className='px-4 py-2 border-b text-left font-semibold'>Job ID</th>
                         <th className='px-4 py-2 border-b text-left font-semibold'>Deskripsi DJM</th>
@@ -423,20 +429,22 @@ const MainPage = () => {
                         currentData.map((item, index) => (
                           <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                             <td className="px-4 py-2">{startIndex + index + 1}</td>
-                            <td className="px-4 py-2 flex items-center justify-center gap-2">
-                              <button
-                                className="bg-blue-400 px-3 py-1 rounded-lg text-white"
-                                onClick={() => openModal(item)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="bg-red-400 px-3 py-1 rounded-lg text-white"
-                                onClick={() => openDelete(item)}
-                              >
-                                Delete
-                              </button>
-                            </td>
+                            {accountData?.roles !== 'User' && (
+                              <td className="px-4 py-2 flex items-center justify-center gap-2">
+                                <button
+                                  className="bg-blue-400 px-3 py-1 rounded-lg text-white"
+                                  onClick={() => openModal(item)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="bg-red-400 px-3 py-1 rounded-lg text-white"
+                                  onClick={() => openDelete(item)}
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            )}
                             <td className="px-4 py-2">{item.nama_job}</td>
                             <td className="px-4 py-2">{item.job_id}</td>
                             <td className="px-4 py-2">{item.deskripsi}</td>

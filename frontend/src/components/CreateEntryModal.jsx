@@ -93,10 +93,10 @@ const CreateEntryModal = ({ activeItem, onClose, idAvailable }) => {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-black font-semibold">Before Date</label>
+              <label className="text-black font-semibold">Beginning Date</label>
               <input
                 type="text"
-                name="befda"
+                name="begda"
                 value={newEntry.befda}
                 onChange={handleChange}
                 className="border border-gray-400 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"

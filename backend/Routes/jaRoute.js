@@ -25,7 +25,7 @@ const uploadMiddleware = upload.fields([
 // Route to create a new report
 router.post("/create", uploadMiddleware, createJA);
 
-router.put('/:job_id/update', uploadMiddleware, async (req, res) => {
+router.put('/:obj_id/update', uploadMiddleware, async (req, res) => {
    await jaUpdate(req, res);
 });
 
@@ -37,7 +37,7 @@ router.get('/:job_id', async (req, res) => {
    await getJAById(req, res);
 });
 
-router.delete('/:job_id/delete', async (req, res) => {
+router.delete('/:obj_id/delete', async (req, res) => {
    await deleteJA(req, res);
 });
 

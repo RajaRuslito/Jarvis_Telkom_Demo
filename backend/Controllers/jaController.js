@@ -1,55 +1,75 @@
-const multer = require("multer");
-const pool = require('../db');
-const upload = require("../middleware/multer");
-const xlsx = require("xlsx");
-const fs = require("fs");
-const path = require("path");
+// Required Libraries
+const multer = require("multer");  // Library for handling file uploads
+const pool = require('../db');  // Database connection pool
+const upload = require("../middleware/multer");  // Multer middleware for handling file uploads
+const xlsx = require("xlsx");  // Library for reading and writing Excel files
+const fs = require("fs");  // File system module for handling file operations
+const path = require("path");  // Path module for working with file paths
 
-
-async function createJA (req, res){
+/**
+ * Create or update job authorities (JobAuth) record in the database.
+ * 
+ * @param {Object} req - The request object, containing the job details.
+ * @param {Object} res - The response object used to send responses back.
+ */
+async function createJA(req, res) {
     const job_id = parseInt(req.body.job_id, 10);
     const { nama_job, deskripsi } = req.body;
 
+    // Check if any required fields are missing
     if (!job_id || !nama_job || !deskripsi) {
         console.error("Missing Fields:", { job_id, nama_job, deskripsi });
         return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     try {
-        const query = `
-        INSERT INTO job_auth (job_id, nama_job, deskripsi)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (job_id)
-        DO UPDATE SET 
-            nama_job = EXCLUDED.nama_job,
-            deskripsi = EXCLUDED.deskripsi
-        RETURNING *; 
-        `;
-        const values = [job_id, nama_job, deskripsi];
+        // Check if the job_id already exists in the database
+        const checkQuery = `SELECT job_id FROM job_auth WHERE job_id = $1`;
+        const existingJob = await pool.query(checkQuery, [job_id]);
 
-        const operation = rows[0].operation_type;
-        if (operation === "created") {
-            console.log(`✅ New Job authorities created for job_id: ${job_id}`);
-            res.status(201).json({
-                success: true,
-                message: `Job authorities ${operation} successfully`,
-                data: rows[0],
-            });
+        let operation;
+        let result;
+
+        if (existingJob.rows.length > 0) {
+            // Update the existing job record
+            const updateQuery = `
+                UPDATE job_auth
+                SET nama_job = $1, deskripsi = $2
+                WHERE job_id = $3
+                RETURNING *;
+            `;
+            result = await pool.query(updateQuery, [nama_job, deskripsi, job_id]);
+            operation = "updated";
         } else {
-            console.log(`♻️ Existing job authorities updated for job_id: ${job_id}`);
-            res.status(201).json({
-                success: true,
-                message: `Job authorities updated successfully`,
-                data: rows[0],
-            });
+            // Insert a new job record
+            const insertQuery = `
+                INSERT INTO job_auth (job_id, nama_job, deskripsi)
+                VALUES ($1, $2, $3)
+                RETURNING *;
+            `;
+            result = await pool.query(insertQuery, [job_id, nama_job, deskripsi]);
+            operation = "created";
         }
+
+        console.log(`✅ Job Authorities ${operation} for job_id: ${job_id}`);
+        res.status(201).json({
+            success: true,
+            message: `Job Authorities ${operation} successfully`,
+            data: result.rows[0],
+        });
+
     } catch (error) {
+        console.error("Error creating Job Authorities:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
-
 }
 
-// Upload XLSX and Insert Data
+/**
+ * Upload an XLSX file and insert data into the job_auth table.
+ * 
+ * @param {Object} req - The request object, containing the uploaded file.
+ * @param {Object} res - The response object used to send responses back.
+ */
 async function uploadXLSX(req, res) {
     try {
         if (!req.file) {
@@ -110,17 +130,22 @@ async function uploadXLSX(req, res) {
     }
 }
 
-// Download XLSX masih belom bisa skip aja
+/**
+ * Download the job_auth table data as an XLSX file.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object used to send the file for download.
+ */
 async function downloadXLSX(req, res) {
     try {
         console.log("🔍 Checking job_auth table...");
-        
+
         // Fetch data from the database
         const result = await pool.query("SELECT * FROM job_auth;");
-        
+
         if (result.rows.length === 0) {
             console.warn("⚠️ No data found in job_auth table.");
-            return res.status(404).json({ error: "No records found to export." }); // Adjusted error message
+            return res.status(404).json({ error: "No records found to export." });
         }
 
         console.log(`📝 Retrieved ${result.rows.length} records from job_auth`);
@@ -158,12 +183,18 @@ async function downloadXLSX(req, res) {
     }
 }
 
+/**
+ * Update job authorities by obj_id.
+ * 
+ * @param {Object} req - The request object, containing the job ID and data to update.
+ * @param {Object} res - The response object used to send responses back.
+ */
 async function jaUpdate(req, res) {
-    const job_id = parseInt(req.params.job_id, 10);
+    const obj_id = parseInt(req.params.obj_id, 10);
     const { nama_job, deskripsi } = req.body;
 
-    if (!job_id || !nama_job || !deskripsi) {
-        console.error("Missing Fields:", { job_id, nama_job, deskripsi });
+    if (!obj_id || !nama_job || !deskripsi) {
+        console.error("Missing Fields:", { obj_id, nama_job, deskripsi });
         return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
@@ -171,8 +202,8 @@ async function jaUpdate(req, res) {
         const result = await pool.query(
             `UPDATE job_auth 
              SET nama_job = $1, deskripsi = $2 
-             WHERE job_id = $3 RETURNING *`,
-            [nama_job, deskripsi, job_id]
+             WHERE obj_id = $3 RETURNING *`,
+            [nama_job, deskripsi, obj_id]
         );
         if (result.rows.length === 0) {
             res.status(404).json({ error: 'job_auth not found' });
@@ -185,6 +216,12 @@ async function jaUpdate(req, res) {
     }
 }
 
+/**
+ * Retrieve all job authorities records.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object used to send the records back.
+ */
 async function getAllJA(req, res) {
     try {
         const result = await pool.query(`SELECT * FROM job_auth`);
@@ -195,7 +232,12 @@ async function getAllJA(req, res) {
     }
 }
 
-// Get report by ID
+/**
+ * Retrieve job authorities record by job_id.
+ * 
+ * @param {Object} req - The request object containing job_id as parameter.
+ * @param {Object} res - The response object used to send the record back.
+ */
 async function getJAById(req, res) {
     const { job_id } = req.params;
     try {
@@ -211,6 +253,12 @@ async function getJAById(req, res) {
     }
 }
 
+/**
+ * Delete job authorities record by job_id.
+ * 
+ * @param {Object} req - The request object containing job_id as parameter.
+ * @param {Object} res - The response object used to send success or error response.
+ */
 async function deleteJA(req, res) {
     const { job_id } = req.params;
 
@@ -230,7 +278,12 @@ async function deleteJA(req, res) {
     }
 }
 
-// Download Template XLSX
+/**
+ * Download an empty template XLSX file for job authorities.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object used to send the template file for download.
+ */
 async function downloadTemplateXLSX(req, res) {
     try {
         // Define the template data (columns without content)
@@ -270,6 +323,12 @@ async function downloadTemplateXLSX(req, res) {
     }
 }
 
+/**
+ * Search for job authorities records based on a query string.
+ * 
+ * @param {Object} req - The request object containing the search query.
+ * @param {Object} res - The response object used to send the matching records back.
+ */
 async function searchJA(req, res) {
     const { search } = req.query;
 

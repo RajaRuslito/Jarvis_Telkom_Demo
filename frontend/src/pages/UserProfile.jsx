@@ -88,7 +88,7 @@ const UserProfile = () => {
                                 className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
                                 onClick={() => window.location.href = "/"}
                             >
-                                {!collapsed && <span className="ml-4">Main</span>}
+                                {!collapsed && <span className="ml-4">Manage DJM</span>}
                             </li>
                             <li className={`cursor-pointer flex items-center p-2 rounded-md bg-blue-500`}
                                 onClick={() => window.location.href = "/profile"}
