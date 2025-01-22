@@ -11,7 +11,7 @@ const {
   downloadTemplateXLSX,
   searchMS,
   upload
-} = require('../Controllers/msController');
+} = require('../jobDescControllers/msController');
 
 const router = express.Router();
 

@@ -12,11 +12,38 @@ const MainPage = () => {
   const navigate = useNavigate();
 
   const menu = [
-    { id: 1, title: 'Mission Statement', endpoint: 'ms', description: 'This is the mission statement of the company' },
-    { id: 2, title: 'Job Responsibilities', endpoint: 'jr', description: 'This is the job responsibilities of the company' },
-    { id: 3, title: 'Job Authorities', endpoint: 'ja', description: 'This is the job authorities of the company' },
-    { id: 4, title: 'Job Performance', endpoint: 'jpi', description: 'This is the job performance of the company' },
+    { id: 1, title: 'Create Job', endpoint: 'cj', description: 'This is the Job Creation of the company' },
+    { id: 2, title: 'Mapping Job', endpoint: 'mj', description: 'This is the Job Mapping of the company' },
   ];
+
+  // The table headers for 'create_job' and 'mapping_job' can be different
+  const tableHeaders = {
+    cj: [
+      { title: 'No.' },
+      { title: 'Action' },
+      { title: 'Nama Job' },
+      { title: 'Job ID' },
+      { title: 'Job Prefix' },
+      { title: 'Company Code' },
+      { title: 'Band' },
+      { title: 'Flag Managerial' },
+      { title: 'Begda' },
+      { title: 'Endda' },
+    ],
+    mj: [
+      { title: 'No.' },
+      { title: 'Action' },
+      { title: 'Job ID' },
+      { title: 'Company Code' },
+      { title: 'Short Posisi' },
+      { title: 'Objid Posisi' },
+      { title: 'Nama Pemangku' },
+      { title: 'NIK Pemangku' },
+      { title: 'Begda' },
+      { title: 'Endda' },
+    ],
+  };
+
 
   const [activeMenu, setActiveMenu] = useState(menu[0]);
   const [data, setData] = useState([]);
@@ -51,7 +78,10 @@ const MainPage = () => {
     (item) =>
       item.job_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.nama_job.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
+      item.job_prefix.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.company_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.band.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.flag_mgr.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const currentData = filteredData.slice(
@@ -82,7 +112,7 @@ const MainPage = () => {
       setLoading(true); // Set loading to true
       setError(null); // Reset any previous errors
       try {
-        const response = await fetch(`http://localhost:5000/jobdesc/${activeMenu.endpoint}/`);
+        const response = await fetch(`http://localhost:5000/job/${activeMenu.endpoint}/`);
         if (!response.ok) {
           throw new Error('Data not found');
         }
@@ -127,7 +157,7 @@ const MainPage = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post(`http://localhost:5000/jobdesc/${activeMenu.endpoint}/upload-xlsx`, formData, {
+      const response = await axios.post(`http://localhost:5000/job/${activeMenu.endpoint}/upload-xlsx`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -143,7 +173,7 @@ const MainPage = () => {
   const fetchJobs = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/jobdesc/${activeMenu.endpoint}/all/search?search=${searchTerm}`
+        `http://localhost:5000/job/${activeMenu.endpoint}/all/search?search=${searchTerm}`
       );
       setJobs(response.data);
     } catch (error) {
@@ -158,7 +188,7 @@ const MainPage = () => {
 
   const handleFileDownload = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/jobdesc/${activeMenu.endpoint}/all/download`, {
+      const response = await axios.get(`http://localhost:5000/job/${activeMenu.endpoint}/all/download`, {
         responseType: 'blob',
       });
 
@@ -178,7 +208,7 @@ const MainPage = () => {
 
   const handleFileDownloadTemplate = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/jobdesc/${activeMenu.endpoint}/all/download-template`, {
+      const response = await axios.get(`http://localhost:5000/job/${activeMenu.endpoint}/all/download-template`, {
         responseType: 'blob',
       });
 
@@ -240,6 +270,46 @@ const MainPage = () => {
     }
   };
 
+  const renderTableRows = (data) => {
+    return data.map((item, index) => (
+      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+        <td className="px-4 py-2">{index + 1}</td>
+        {activeMenu.endpoint === 'cj' && (
+          <>
+            <td className="px-4 py-2 flex gap-2">
+              <button className="bg-blue-400 px-3 py-1 rounded-lg text-white">Edit</button>
+              <button className="bg-red-400 px-3 py-1 rounded-lg text-white">Delete</button>
+            </td>
+            <td className="px-4 py-2">{item.nama_job}</td>
+            <td className="px-4 py-2">{item.job_id}</td>
+            <td className="px-4 py-2">{item.job_prefix}</td>
+            <td className="px-4 py-2">{item.company_code}</td>
+            <td className="px-4 py-2">{item.band}</td>
+            <td className="px-4 py-2">{item.flag_mgr}</td>
+            <td className="px-4 py-2">{item.begda}</td>
+            <td className="px-4 py-2">{item.endda}</td>
+          </>
+        )}
+        {activeMenu.endpoint === 'mj' && (
+          <>
+            <td className="px-4 py-2 flex gap-2">
+              <button className="bg-blue-400 px-3 py-1 rounded-lg text-white">Edit</button>
+              <button className="bg-red-400 px-3 py-1 rounded-lg text-white">Delete</button>
+            </td>
+            <td className="px-4 py-2">{item.job_id}</td>
+            <td className="px-4 py-2">{item.company_code}</td>
+            <td className="px-4 py-2">{item.short_posisi}</td>
+            <td className="px-4 py-2">{item.obid_posisi}</td>
+            <td className="px-4 py-2">{item.nama_pemangku}</td>
+            <td className="px-4 py-2">{item.nik_pemangku}</td>
+            <td className="px-4 py-2">{item.begda}</td>
+            <td className="px-4 py-2">{item.endda}</td>
+          </>
+        )}
+      </tr>
+    ));
+  };
+
   return (
     <>
       <header className="bg-white shadow flex items-center justify-between py-4 px-6">
@@ -289,13 +359,13 @@ const MainPage = () => {
           <nav>
             <ul className="space-y-4">
               <li
-                className={`cursor-pointer flex items-center p-2 rounded-md bg-blue-500`}
+                className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
                 onClick={() => window.location.href = "/jobdesc"}
               >
                 {!collapsed && <span className="ml-4">Job Desc</span>}
               </li>
               <li
-                className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
+                className={`cursor-pointer flex items-center p-2 rounded-md bg-blue-500`}
                 onClick={() => window.location.href = "/job"}
               >
                 {!collapsed && <span className="ml-4">Job</span>}
@@ -412,58 +482,39 @@ const MainPage = () => {
                 </div>
               </div>
 
-              <div className='mt-5'>
-                {loading && <p>Loading...</p>}
-                {error && <p className='text-red-500'>{error}</p>}
-                {!loading && !error && (
-                  <table className='w-full table-auto border-collapse'>
-                    <thead className='bg-gray-300'>
+              {/* Render table */}
+              <div className="w-full bg-white px-5 py-7 mt-5 rounded-md shadow-sm">
+                <table className="w-full table-auto border-collapse">
+                  <thead className="bg-gray-300">
+                    <tr>
+                      {tableHeaders[activeMenu.endpoint]?.map((header, idx) => (
+                        <th key={idx} className="px-4 py-2 border-b text-left font-semibold">
+                          {header.title}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
                       <tr>
-                        <th className='px-4 py-2 border-b text-left font-semibold'>No.</th>
-                        {accountData?.roles !== 'User' && (
-                          <th className='px-4 py-2 border-b text-left font-semibold'>Action</th>
-                        )}
-                        <th className='px-4 py-2 border-b text-left font-semibold'>Nama Job</th>
-                        <th className='px-4 py-2 border-b text-left font-semibold'>Job ID</th>
-                        <th className='px-4 py-2 border-b text-left font-semibold'>Deskripsi DJM</th>
-                        <th className='px-4 py-2 border-b text-left font-semibold'>Begda</th>
-                        <th className='px-4 py-2 border-b text-left font-semibold'>Endda</th>
+                        <td colSpan={tableHeaders[activeMenu.endpoint].length} className="text-center py-4">
+                          Loading...
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {currentData &&
-                        currentData.map((item, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                            <td className="px-4 py-2">{startIndex + index + 1}</td>
-                            {accountData?.roles !== 'User' && (
-                              <td className="px-4 py-2 flex items-center justify-center gap-2">
-                                <button
-                                  className="bg-blue-400 px-3 py-1 rounded-lg text-white"
-                                  onClick={() => openModal(item)}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="bg-red-400 px-3 py-1 rounded-lg text-white"
-                                  onClick={() => openDelete(item)}
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            )}
-                            <td className="px-4 py-2">{item.nama_job}</td>
-                            <td className="px-4 py-2">{item.job_id}</td>
-                            <td className="px-4 py-2">{item.deskripsi}</td>
-                            <td className="px-4 py-2">{item.begda}</td>
-                            <td className="px-4 py-2">{item.endda}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-
-                  </table>
-                )}
-                {renderPagination()}
+                    ) : error ? (
+                      <tr>
+                        <td colSpan={tableHeaders[activeMenu.endpoint].length} className="text-center py-4 text-red-500">
+                          {error}
+                        </td>
+                      </tr>
+                    ) : (
+                      renderTableRows(data)
+                    )}
+                  </tbody>
+                </table>
               </div>
+              
+              {renderPagination()}
             </div>
           </div>
         </div>

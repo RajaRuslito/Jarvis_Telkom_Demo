@@ -44,7 +44,7 @@ const UserProfile = () => {
                 {/* Left: Title */}
                 <h1
                     className="text-2xl font-bold cursor-pointer"
-                    onClick={() => (window.location.href = "/")}
+                    onClick={() => (window.location.href = "/jobdesc")}
                 >
                     Jarvis Demo
                 </h1>
@@ -83,18 +83,24 @@ const UserProfile = () => {
                     onMouseLeave={() => setCollapsed(true)}
                 >
                     <nav>
-                        <ul className="space-y-4">
-                            <li
-                                className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
-                                onClick={() => window.location.href = "/"}
-                            >
-                                {!collapsed && <span className="ml-4">Manage DJM</span>}
-                            </li>
-                            <li className={`cursor-pointer flex items-center p-2 rounded-md bg-blue-500`}
-                                onClick={() => window.location.href = "/profile"}
-                            >
-                                {!collapsed && <span className="ml-4">Profile</span>}
-                            </li>
+                    <ul className="space-y-4">
+                        <li
+                            className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
+                            onClick={() => window.location.href = "/jobdesc"}
+                        >
+                            {!collapsed && <span className="ml-4">Job Desc</span>}
+                        </li>
+                        <li
+                            className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
+                            onClick={() => window.location.href = "/job"}
+                        >
+                            {!collapsed && <span className="ml-4">Job</span>}
+                        </li>
+                        <li className={`cursor-pointer flex items-center p-2 rounded-md bg-blue-500`}
+                            onClick={() => window.location.href = "/profile"}
+                        >
+                            {!collapsed && <span className="ml-4">Profile</span>}
+                        </li>
                         </ul>
                     </nav>
                 </aside>

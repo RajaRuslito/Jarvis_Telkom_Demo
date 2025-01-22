@@ -7,6 +7,8 @@ const jrRoute = require('./Routes/jrRoute');
 const jpiRoute = require('./Routes/jpiRoute');
 const msRoute = require('./Routes/msRoute');
 const accountRoute = require('./Routes/accountRoute');
+const cjRoute = require('./Routes/createJobRoute');
+const mjRoute = require('./Routes/mappingRoute')
 const dotenv = require('dotenv');
 const multer = require("multer");
 const app = express();
@@ -24,11 +26,13 @@ app.use(bodyParser.json());
 app.use(express.json());
 
 //app.use('/uploads', express.static('uploads'));
-app.use('/ja', jaRoute);
-app.use('/jpi', jpiRoute);
-app.use('/jr', jrRoute);
-app.use('/ms', msRoute);
+app.use('/jobdesc/ja', jaRoute);
+app.use('/jobdesc/jpi', jpiRoute);
+app.use('/jobdesc/jr', jrRoute);
+app.use('/jobdesc/ms', msRoute);
 app.use('/account', accountRoute);
+app.use('/job/cj', cjRoute);
+app.use('/job/mj', mjRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

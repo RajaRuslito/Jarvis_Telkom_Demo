@@ -22,7 +22,7 @@ const Login = () => {
       localStorage.setItem("account", JSON.stringify(response.data.account));
 
       // Lakukan redirect atau perubahan tampilan setelah login
-      window.location.href = "/";
+      window.location.href = "/jobdesc";
     } catch (error) {
       if (error.response) {
         setErrorMessage(error.response.data.error);
