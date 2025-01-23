@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import EditModal from '../components/EditModal';
+import EditModalJob from '../components/EditModalJob';
 import DeleteModal from '../components/DeleteModal';
-import CreateEntryModal from '../components/CreateEntryModal';
+import CreateEntryModalJob from '../components/CreateEntryModalJob';
 import axios from 'axios';
 import profile from '../assets/profile.png'
 import { useNavigate } from 'react-router-dom';
@@ -277,8 +277,18 @@ const MainPage = () => {
         {activeMenu.endpoint === 'cj' && (
           <>
             <td className="px-4 py-2 flex gap-2">
-              <button className="bg-blue-400 px-3 py-1 rounded-lg text-white">Edit</button>
-              <button className="bg-red-400 px-3 py-1 rounded-lg text-white">Delete</button>
+            <button 
+                className="bg-blue-400 px-3 py-1 rounded-lg text-white"
+                onClick={() => openModal(item)}      
+              >
+                Edit
+              </button>
+              <button 
+                className="bg-red-400 px-3 py-1 rounded-lg text-white"
+                onClick={() => openDelete(item)}
+              >
+                Delete
+              </button>
             </td>
             <td className="px-4 py-2">{item.nama_job}</td>
             <td className="px-4 py-2">{item.job_id}</td>
@@ -293,8 +303,18 @@ const MainPage = () => {
         {activeMenu.endpoint === 'mj' && (
           <>
             <td className="px-4 py-2 flex gap-2">
-              <button className="bg-blue-400 px-3 py-1 rounded-lg text-white">Edit</button>
-              <button className="bg-red-400 px-3 py-1 rounded-lg text-white">Delete</button>
+              <button 
+                className="bg-blue-400 px-3 py-1 rounded-lg text-white"
+                onClick={() => openModal(item)}      
+              >
+                Edit
+              </button>
+              <button 
+                className="bg-red-400 px-3 py-1 rounded-lg text-white"
+                onClick={() => openDelete(item)}
+              >
+                Delete
+              </button>
             </td>
             <td className="px-4 py-2">{item.job_id}</td>
             <td className="px-4 py-2">{item.company_code}</td>
@@ -385,7 +405,7 @@ const MainPage = () => {
         >
           {/* Rest of the content */}
           {isModalOpen && selectedItem && (
-            <EditModal entryData={selectedItem} activeItem={activeMenu} onClose={closeModal} />
+            <EditModalJob entryData={selectedItem} activeItem={activeMenu.endpoint} onClose={closeModal} />
           )}
 
           {deleteModalOpened && selectedItem && (
@@ -393,7 +413,7 @@ const MainPage = () => {
           )}
 
           {createModalOpened && (
-            <CreateEntryModal activeItem={activeMenu} onClose={() => setCreateModalOpened(false)} idAvailable={maxJobId + 1} />
+            <CreateEntryModalJob activeItem={activeMenu} onClose={() => setCreateModalOpened(false)} />
           )}
 
           <div className='w-full h-screen px-5 py-3 bg-gray-100'>
@@ -483,7 +503,7 @@ const MainPage = () => {
               </div>
 
               {/* Render table */}
-              <div className="w-full bg-white px-5 py-7 mt-5 rounded-md shadow-sm">
+              <div className="w-full bg-white mt-5 rounded-md shadow-sm">
                 <table className="w-full table-auto border-collapse">
                   <thead className="bg-gray-300">
                     <tr>

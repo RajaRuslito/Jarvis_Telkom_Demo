@@ -5,7 +5,7 @@ const DeleteModal = ({ entryData, activeItem, onClose }) => {
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/${activeItem.endpoint}/${entryData.obj_id}/delete`
+        `http://localhost:5000/jobdesc/${activeItem.endpoint}/${entryData.obj_id}/delete`
       );
 
       if (response.status === 200) {
