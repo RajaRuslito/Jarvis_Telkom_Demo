@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import EditModalJob from '../components/EditModalJob';
-import DeleteModal from '../components/DeleteModal';
-import CreateEntryModalJob from '../components/CreateEntryModalJob';
+import EditModalJob from '../jobmaincomponents/EditModalJob';
+import DeleteModalJob from '../jobmaincomponents/DeleteModalJob';
+import CreateEntryModalJob from '../jobmaincomponents/CreateEntryModalJob';
 import axios from 'axios';
 import profile from '../assets/profile.png'
 import { useNavigate } from 'react-router-dom';
@@ -74,15 +74,28 @@ const MainPage = () => {
   };
 
   // Filter data by search term
-  const filteredData = data.filter(
-    (item) =>
-      item.job_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.nama_job.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.job_prefix.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.company_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.band.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.flag_mgr.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = data.filter((item) => {
+    if (activeMenu.endpoint === 'cj') {
+      return (
+        item.job_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.nama_job.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.job_prefix.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.company_code.toString().includes(searchTerm.toLowerCase()) ||
+        item.band.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.flag_mgr.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    } else if (activeMenu.endpoint === 'mj') {
+      return (
+        item.job_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.short_posisi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.obid_posisi.toString().includes(searchTerm.toLowerCase()) ||
+        item.nama_pemangku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.nik_pemangku.toString().includes(searchTerm.toLowerCase())
+      );
+    }
+    return false;
+  });
+  
 
   const currentData = filteredData.slice(
     (currentPage - 1) * entriesPerPage,
@@ -91,7 +104,7 @@ const MainPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("account");
-    navigate("/login");
+    navigate("/");
   };
 
   // account logged handle
@@ -101,7 +114,7 @@ const MainPage = () => {
     console.log("Account Data:", accountData);
   } else {
     console.log("No account data found in localStorage");
-    navigate('/login')
+    navigate('/')
   }
 
 
@@ -273,23 +286,25 @@ const MainPage = () => {
   const renderTableRows = (data) => {
     return data.map((item, index) => (
       <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-        <td className="px-4 py-2">{index + 1}</td>
+        <td className="px-4 py-2">{index + 1 + (currentPage - 1) * entriesPerPage}</td>
+        {accountData?.roles !== 'User' && (
+          <td className="px-4 py-2 flex gap-2">
+            <button
+              className="bg-blue-400 px-3 py-1 rounded-lg text-white"
+              onClick={() => openModal(item)}
+            >
+              Edit
+            </button>
+            <button
+              className="bg-red-400 px-3 py-1 rounded-lg text-white"
+              onClick={() => openDelete(item)}
+            >
+              Delete
+            </button>
+          </td>
+        )}
         {activeMenu.endpoint === 'cj' && (
           <>
-            <td className="px-4 py-2 flex gap-2">
-            <button 
-                className="bg-blue-400 px-3 py-1 rounded-lg text-white"
-                onClick={() => openModal(item)}      
-              >
-                Edit
-              </button>
-              <button 
-                className="bg-red-400 px-3 py-1 rounded-lg text-white"
-                onClick={() => openDelete(item)}
-              >
-                Delete
-              </button>
-            </td>
             <td className="px-4 py-2">{item.nama_job}</td>
             <td className="px-4 py-2">{item.job_id}</td>
             <td className="px-4 py-2">{item.job_prefix}</td>
@@ -302,20 +317,6 @@ const MainPage = () => {
         )}
         {activeMenu.endpoint === 'mj' && (
           <>
-            <td className="px-4 py-2 flex gap-2">
-              <button 
-                className="bg-blue-400 px-3 py-1 rounded-lg text-white"
-                onClick={() => openModal(item)}      
-              >
-                Edit
-              </button>
-              <button 
-                className="bg-red-400 px-3 py-1 rounded-lg text-white"
-                onClick={() => openDelete(item)}
-              >
-                Delete
-              </button>
-            </td>
             <td className="px-4 py-2">{item.job_id}</td>
             <td className="px-4 py-2">{item.company_code}</td>
             <td className="px-4 py-2">{item.short_posisi}</td>
@@ -390,6 +391,12 @@ const MainPage = () => {
               >
                 {!collapsed && <span className="ml-4">Job</span>}
               </li>
+              <li
+                className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
+                onClick={() => window.location.href = "/jobreq"}
+              >
+                {!collapsed && <span className="ml-4">Job Req</span>}
+              </li>
               <li className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
                 onClick={() => window.location.href = "/profile"}
               >
@@ -409,7 +416,7 @@ const MainPage = () => {
           )}
 
           {deleteModalOpened && selectedItem && (
-            <DeleteModal entryData={selectedItem} activeItem={activeMenu} onClose={() => setDeleteModalOpened(false)} />
+            <DeleteModalJob entryData={selectedItem} activeItem={activeMenu} onClose={() => setDeleteModalOpened(false)} />
           )}
 
           {createModalOpened && (
@@ -479,26 +486,28 @@ const MainPage = () => {
                   >
                     Download
                   </button>
-
-                  <input
-                    type="text"
-                    placeholder="Search by job_id, nama_job, or deskripsi"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="border p-2"
-                  />
-                  {/* <button onClick={fetchJobs} className="bg-blue-500 text-white p-2 ml-2">
-                    Search
-                  </button>
-                  <ul>
-                    {jobs.map((job) => (
-                      <li key={job.job_id}>
-                        <h2>{job.nama_job}</h2>
-                        <p>{job.deskripsi}</p>
-                      </li>
-                    ))}
-                  </ul> */}
-
+                  {activeMenu.endpoint === 'cj' && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Search by job_id, nama_job, job_prefix, company_code, or band"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="border p-2"
+                      />
+                    </>
+                  )}
+                  {activeMenu.endpoint === 'mj' && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Search by job_id, short_posisi, obid_posisi, nama_pemangku, or nik_pemangku"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="border p-2"
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -528,7 +537,7 @@ const MainPage = () => {
                         </td>
                       </tr>
                     ) : (
-                      renderTableRows(data)
+                      renderTableRows(filteredData)
                     )}
                   </tbody>
                 </table>

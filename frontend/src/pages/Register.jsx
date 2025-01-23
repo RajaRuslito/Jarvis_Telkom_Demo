@@ -35,7 +35,7 @@ const Register = () => {
                 if (response.status === 201) {
                     setSuccessMessage("Registration successful! Please login.");
                     setErrorMessage(""); // Clear any previous errors
-                    window.location.href = "/login"; // Redirect to login page
+                    window.location.href = "/"; // Redirect to login page
                 }
             } catch (error) {
                 if (error.response) {
@@ -153,7 +153,7 @@ const Register = () => {
 
                 <p className="text-sm text-gray-600 text-center mt-4">
                     Already have an account?{" "}
-                    <a href="/login" className="text-blue-500 hover:underline">
+                    <a href="/" className="text-blue-500 hover:underline">
                         Login here
                     </a>
                 </p>

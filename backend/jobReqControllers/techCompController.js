@@ -7,7 +7,7 @@ const fs = require("fs"); // File system module for interacting with the file sy
 const path = require("path"); // Path module for working with file paths
 
 // Function to create or update Job Performance Indicator (JPI)
-async function createJPI(req, res) {
+async function createTC(req, res) {
     // Extract job_id, nama_job, and deskripsi from the request body
     const job_id = parseInt(req.body.job_id, 10);
     const { nama_job, deskripsi } = req.body;
@@ -20,7 +20,7 @@ async function createJPI(req, res) {
 
     try {
         // Check if job_id already exists in the database
-        const checkQuery = `SELECT job_id FROM job_pi WHERE job_id = $1`;
+        const checkQuery = `SELECT job_id FROM tc WHERE job_id = $1`;
         const existingJob = await pool.query(checkQuery, [job_id]);
 
         let operation;
@@ -29,7 +29,7 @@ async function createJPI(req, res) {
         if (existingJob.rows.length > 0) {
             // If the job_id exists, update the existing record
             const updateQuery = `
-                UPDATE job_pi
+                UPDATE tc
                 SET nama_job = $1, deskripsi = $2
                 WHERE job_id = $3
                 RETURNING *;
@@ -39,7 +39,7 @@ async function createJPI(req, res) {
         } else {
             // If the job_id does not exist, insert a new record
             const insertQuery = `
-                INSERT INTO job_pi (job_id, nama_job, deskripsi)
+                INSERT INTO tc (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3)
                 RETURNING *;
             `;
@@ -84,12 +84,12 @@ async function uploadXLSX(req, res) {
 
         // Check if any records need to be deleted before inserting new data
         for (const jobId of jobIds) {
-            const checkQuery = `SELECT COUNT(*) FROM job_pi WHERE job_id = $1`;
+            const checkQuery = `SELECT COUNT(*) FROM tc WHERE job_id = $1`;
             const { rows } = await pool.query(checkQuery, [jobId]);
 
             if (parseInt(rows[0].count) > 0) {
                 // Delete existing records for this job_id
-                const deleteQuery = `DELETE FROM job_pi WHERE job_id = $1 RETURNING *`;
+                const deleteQuery = `DELETE FROM tc WHERE job_id = $1 RETURNING *`;
                 const deletedRows = await pool.query(deleteQuery, [jobId]);
                 deletedCount += deletedRows.rowCount;
                 console.log(`Deleted ${deletedRows.rowCount} entries for job_id: ${jobId}`);
@@ -105,7 +105,7 @@ async function uploadXLSX(req, res) {
             }
 
             const insertQuery = `
-                INSERT INTO job_pi (job_id, nama_job, deskripsi)
+                INSERT INTO tc (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3) RETURNING *;
             `;
             await pool.query(insertQuery, [row.job_id, row.nama_job, row.deskripsi]);
@@ -132,18 +132,18 @@ async function uploadXLSX(req, res) {
 // Function to download all JPI records as an XLSX file
 async function downloadXLSX(req, res) {
     try {
-        console.log("🔍 Checking job_pi table...");
+        console.log("🔍 Checking tc table...");
 
         // Fetch data from the database
-        const result = await pool.query("SELECT * FROM job_pi;");
+        const result = await pool.query("SELECT * FROM tc;");
 
         // Check if data exists in the database
         if (result.rows.length === 0) {
-            console.warn("⚠️ No data found in job_pi table.");
+            console.warn("⚠️ No data found in tc table.");
             return res.status(404).json({ error: "No records found to export." });
         }
 
-        console.log(`📝 Retrieved ${result.rows.length} records from job_pi`);
+        console.log(`📝 Retrieved ${result.rows.length} records from tc`);
 
         // Convert data into a worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
@@ -151,7 +151,7 @@ async function downloadXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "JobPerformanceIndicator");
 
         // Define file path for the generated XLSX file
-        const filePath = path.join(__dirname, "../downloads/job_pi.xlsx");
+        const filePath = path.join(__dirname, "../downloads/tc.xlsx");
 
         // Ensure the directory exists before writing the file
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -163,7 +163,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_pi.xlsx", (err) => {
+        res.download(filePath, "tc.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -180,14 +180,14 @@ async function downloadXLSX(req, res) {
 }
 
 // Function to update a Job Performance Indicator (JPI) by obj_id
-async function jpiUpdate(req, res) {
+async function tcUpdate(req, res) {
     const obj_id = parseInt(req.params.obj_id, 10);
     const { nama_job, deskripsi } = req.body;
 
     try {
         // Perform the update operation on the database
         const result = await pool.query(
-            `UPDATE job_pi 
+            `UPDATE tc 
              SET nama_job = $1, deskripsi = $2 
              WHERE obj_id = $3 RETURNING *`,
             [nama_job, deskripsi, obj_id]
@@ -195,7 +195,7 @@ async function jpiUpdate(req, res) {
 
         // Check if the record was found and updated
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'job_pi not found' });
+            res.status(404).json({ error: 'tc not found' });
         } else {
             res.json(result.rows[0]);
         }
@@ -207,9 +207,9 @@ async function jpiUpdate(req, res) {
 }
 
 // Function to fetch all Job Performance Indicators (JPIs)
-async function getAllJPI(req, res) {
+async function getAllTC(req, res) {
     try {
-        const result = await pool.query(`SELECT * FROM job_pi`);
+        const result = await pool.query(`SELECT * FROM tc`);
         res.json(result.rows);
     } catch (error) {
         // Handle errors and respond with status 500
@@ -219,10 +219,10 @@ async function getAllJPI(req, res) {
 }
 
 // Function to fetch a Job Performance Indicator by job_id
-async function getJPIById(req, res) {
+async function getTCById(req, res) {
     const { job_id } = req.params;
     try {
-        const result = await pool.query(`SELECT * FROM job_pi WHERE job_id = $1`, [job_id]);
+        const result = await pool.query(`SELECT * FROM tc WHERE job_id = $1`, [job_id]);
         if (result.rows.length === 0) {
             res.status(404).json({ error: 'Report not found' });
         } else {
@@ -230,18 +230,18 @@ async function getJPIById(req, res) {
         }
     } catch (error) {
         // Handle errors and respond with status 500
-        console.error('Error getting job_pi by ID:', error);
-        res.status(500).json({ error: 'Error getting job_pi by ID' });
+        console.error('Error getting tc by ID:', error);
+        res.status(500).json({ error: 'Error getting tc by ID' });
     }
 }
 
 // Function to delete a Job Performance Indicator by obj_id
-async function deleteJPI(req, res) {
+async function deleteTC(req, res) {
     const { obj_id } = req.params;
 
     try {
         const result = await pool.query(
-            'DELETE FROM job_pi WHERE obj_id = $1 RETURNING *',
+            'DELETE FROM tc WHERE obj_id = $1 RETURNING *',
             [obj_id]
         );
         if (result.rows.length === 0) {
@@ -257,12 +257,12 @@ async function deleteJPI(req, res) {
 }
 
 // Function to search Job Performance Indicators by search query
-async function searchJPI(req, res) {
+async function searchTC(req, res) {
     const { search } = req.query;
 
     try {
         const result = await pool.query(
-            `SELECT * FROM job_pi WHERE 
+            `SELECT * FROM tc WHERE 
             CAST(job_id AS TEXT) ILIKE $1 OR 
             nama_job ILIKE $1 OR 
             deskripsi ILIKE $1`,
@@ -324,14 +324,14 @@ async function downloadTemplateXLSX(req, res) {
 
 // Export all functions for use in other modules
 module.exports = {
-    createJPI,
-    jpiUpdate,
-    getAllJPI,
-    getJPIById,
-    deleteJPI,
+    createTC,
+    tcUpdate,
+    getAllTC,
+    getTCById,
+    deleteTC,
     uploadXLSX,
     downloadXLSX,
     downloadTemplateXLSX,
-    searchJPI,
+    searchTC,
     upload
 };

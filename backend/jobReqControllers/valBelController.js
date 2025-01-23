@@ -12,7 +12,7 @@ const path = require("path");  // Path module for working with file paths
  * @param {Object} req - The request object, containing the job details.
  * @param {Object} res - The response object used to send responses back.
  */
-async function createJA(req, res) {
+async function createVB(req, res) {
     const job_id = parseInt(req.body.job_id, 10);
     const { nama_job, deskripsi } = req.body;
 
@@ -24,7 +24,7 @@ async function createJA(req, res) {
 
     try {
         // Check if the job_id already exists in the database
-        const checkQuery = `SELECT job_id FROM job_auth WHERE job_id = $1`;
+        const checkQuery = `SELECT job_id FROM val_bel WHERE job_id = $1`;
         const existingJob = await pool.query(checkQuery, [job_id]);
 
         let operation;
@@ -33,7 +33,7 @@ async function createJA(req, res) {
         if (existingJob.rows.length > 0) {
             // Update the existing job record
             const updateQuery = `
-                UPDATE job_auth
+                UPDATE val_bel
                 SET nama_job = $1, deskripsi = $2
                 WHERE job_id = $3
                 RETURNING *;
@@ -43,7 +43,7 @@ async function createJA(req, res) {
         } else {
             // Insert a new job record
             const insertQuery = `
-                INSERT INTO job_auth (job_id, nama_job, deskripsi)
+                INSERT INTO val_bel (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3)
                 RETURNING *;
             `;
@@ -65,7 +65,7 @@ async function createJA(req, res) {
 }
 
 /**
- * Upload an XLSX file and insert data into the job_auth table.
+ * Upload an XLSX file and insert data into the val_bel table.
  * 
  * @param {Object} req - The request object, containing the uploaded file.
  * @param {Object} res - The response object used to send responses back.
@@ -88,12 +88,12 @@ async function uploadXLSX(req, res) {
 
         for (const jobId of jobIds) {
             // Check if job_id exists
-            const checkQuery = `SELECT COUNT(*) FROM job_auth WHERE job_id = $1`;
+            const checkQuery = `SELECT COUNT(*) FROM val_bel WHERE job_id = $1`;
             const { rows } = await pool.query(checkQuery, [jobId]);
 
             if (parseInt(rows[0].count) > 0) {
                 // Delete all existing entries for this job_id
-                const deleteQuery = `DELETE FROM job_auth WHERE job_id = $1 RETURNING *`;
+                const deleteQuery = `DELETE FROM val_bel WHERE job_id = $1 RETURNING *`;
                 const deletedRows = await pool.query(deleteQuery, [jobId]);
                 deletedCount += deletedRows.rowCount;
                 console.log(`Deleted ${deletedRows.rowCount} entries for job_id: ${jobId}`);
@@ -108,7 +108,7 @@ async function uploadXLSX(req, res) {
             }
 
             const insertQuery = `
-                INSERT INTO job_auth (job_id, nama_job, deskripsi)
+                INSERT INTO val_bel (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3) RETURNING *;
             `;
             await pool.query(insertQuery, [row.job_id, row.nama_job, row.deskripsi]);
@@ -131,24 +131,24 @@ async function uploadXLSX(req, res) {
 }
 
 /**
- * Download the job_auth table data as an XLSX file.
+ * Download the val_bel table data as an XLSX file.
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object used to send the file for download.
  */
 async function downloadXLSX(req, res) {
     try {
-        console.log("🔍 Checking job_auth table...");
+        console.log("🔍 Checking val_bel table...");
 
         // Fetch data from the database
-        const result = await pool.query("SELECT * FROM job_auth;");
+        const result = await pool.query("SELECT * FROM val_bel;");
 
         if (result.rows.length === 0) {
-            console.warn("⚠️ No data found in job_auth table.");
+            console.warn("⚠️ No data found in val_bel table.");
             return res.status(404).json({ error: "No records found to export." });
         }
 
-        console.log(`📝 Retrieved ${result.rows.length} records from job_auth`);
+        console.log(`📝 Retrieved ${result.rows.length} records from val_bel`);
 
         // Convert data into worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
@@ -156,7 +156,7 @@ async function downloadXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "JobAuthorities");
 
         // Define file path
-        const filePath = path.join(__dirname, "../downloads/job_authorities.xlsx");
+        const filePath = path.join(__dirname, "../downloads/val_belorities.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -168,7 +168,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_authorities.xlsx", (err) => {
+        res.download(filePath, "val_belorities.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -189,7 +189,7 @@ async function downloadXLSX(req, res) {
  * @param {Object} req - The request object, containing the job ID and data to update.
  * @param {Object} res - The response object used to send responses back.
  */
-async function jaUpdate(req, res) {
+async function vbUpdate(req, res) {
     const obj_id = parseInt(req.params.obj_id, 10);
     const { nama_job, deskripsi } = req.body;
 
@@ -200,19 +200,19 @@ async function jaUpdate(req, res) {
 
     try {
         const result = await pool.query(
-            `UPDATE job_auth 
+            `UPDATE val_bel 
              SET nama_job = $1, deskripsi = $2 
              WHERE obj_id = $3 RETURNING *`,
             [nama_job, deskripsi, obj_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'job_auth not found' });
+            res.status(404).json({ error: 'val_bel not found' });
         } else {
             res.json(result.rows[0]);
         }
     } catch (error) {
-        console.error('Error updating job_auth:', error);
-        res.status(500).json({ error: 'Error updating job_auth' });
+        console.error('Error updating val_bel:', error);
+        res.status(500).json({ error: 'Error updating val_bel' });
     }
 }
 
@@ -222,9 +222,9 @@ async function jaUpdate(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object used to send the records back.
  */
-async function getAllJA(req, res) {
+async function getAllVB(req, res) {
     try {
-        const result = await pool.query(`SELECT * FROM job_auth`);
+        const result = await pool.query(`SELECT * FROM val_bel`);
         res.json(result.rows);
     } catch (error) {
         console.error('Error getting Job Authorities:', error);
@@ -238,10 +238,10 @@ async function getAllJA(req, res) {
  * @param {Object} req - The request object containing job_id as parameter.
  * @param {Object} res - The response object used to send the record back.
  */
-async function getJAById(req, res) {
+async function getVBById(req, res) {
     const { job_id } = req.params;
     try {
-        const result = await pool.query(`SELECT * FROM job_auth WHERE job_id = $1`, [job_id]);
+        const result = await pool.query(`SELECT * FROM val_bel WHERE job_id = $1`, [job_id]);
         if (result.rows.length === 0) {
             res.status(404).json({ error: 'Report not found' });
         } else {
@@ -259,12 +259,12 @@ async function getJAById(req, res) {
  * @param {Object} req - The request object containing job_id as parameter.
  * @param {Object} res - The response object used to send success or error response.
  */
-async function deleteJA(req, res) {
+async function deleteVB(req, res) {
     const { job_id } = req.params;
 
     try {
         const result = await pool.query(
-            'DELETE FROM job_auth WHERE job_id = $1 RETURNING *',
+            'DELETE FROM val_bel WHERE job_id = $1 RETURNING *',
             [job_id]
         );
         if (result.rows.length === 0) {
@@ -297,7 +297,7 @@ async function downloadTemplateXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "Template");
 
         // Define file path for the template
-        const filePath = path.join(__dirname, "../downloads/job_authorities_template.xlsx");
+        const filePath = path.join(__dirname, "../downloads/val_belorities_template.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -309,7 +309,7 @@ async function downloadTemplateXLSX(req, res) {
         console.log(`✅ Template XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_authorities_template.xlsx", (err) => {
+        res.download(filePath, "val_belorities_template.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the template" });
@@ -329,12 +329,12 @@ async function downloadTemplateXLSX(req, res) {
  * @param {Object} req - The request object containing the search query.
  * @param {Object} res - The response object used to send the matching records back.
  */
-async function searchJA(req, res) {
+async function searchVB(req, res) {
     const { search } = req.query;
 
     try {
         const result = await pool.query(
-            `SELECT * FROM job_auth WHERE 
+            `SELECT * FROM val_bel WHERE 
             CAST(job_id AS TEXT) ILIKE $1 OR 
             nama_job ILIKE $1 OR 
             deskripsi ILIKE $1`,
@@ -353,14 +353,14 @@ async function searchJA(req, res) {
 }
 
 module.exports = {
-    createJA,
-    jaUpdate,
-    getAllJA,
-    getJAById,
-    deleteJA,
+    createVB,
+    vbUpdate,
+    getAllVB,
+    getVBById,
+    deleteVB,
     uploadXLSX,
     downloadXLSX,
     downloadTemplateXLSX,
-    searchJA,
+    searchVB,
     upload
 };

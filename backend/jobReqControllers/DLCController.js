@@ -11,7 +11,7 @@ const fs = require("fs");
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-async function createMS(req, res) {
+async function createDLC(req, res) {
     const job_id = parseInt(req.body.job_id, 10);
     const { nama_job, deskripsi } = req.body;
 
@@ -23,7 +23,7 @@ async function createMS(req, res) {
 
     try {
         // Check if job_id already exists in the database.
-        const checkQuery = `SELECT job_id FROM mission_statement WHERE job_id = $1`;
+        const checkQuery = `SELECT job_id FROM dlc WHERE job_id = $1`;
         const existingJob = await pool.query(checkQuery, [job_id]);
 
         let operation;
@@ -32,7 +32,7 @@ async function createMS(req, res) {
         if (existingJob.rows.length > 0) {
             // Update existing mission statement if job_id exists.
             const updateQuery = `
-                UPDATE mission_statement
+                UPDATE dlc
                 SET nama_job = $1, deskripsi = $2
                 WHERE job_id = $3
                 RETURNING *;
@@ -42,7 +42,7 @@ async function createMS(req, res) {
         } else {
             // Insert a new mission statement if job_id does not exist.
             const insertQuery = `
-                INSERT INTO mission_statement (job_id, nama_job, deskripsi)
+                INSERT INTO dlc (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3)
                 RETURNING *;
             `;
@@ -95,13 +95,13 @@ async function uploadXLSX(req, res){
             }
 
             // Check if the job_id exists in the database.
-            const checkQuery = `SELECT * FROM mission_statement WHERE job_id = $1`;
+            const checkQuery = `SELECT * FROM dlc WHERE job_id = $1`;
             const existingJob = await pool.query(checkQuery, [parseInt(row.job_id)]);
 
             if (existingJob.rows.length > 0) {
                 // If job_id exists, update the record.
                 const updateQuery = `
-                    UPDATE mission_statement 
+                    UPDATE dlc 
                     SET nama_job = $1, deskripsi = $2 
                     WHERE job_id = $3 RETURNING *;
                 `;
@@ -111,7 +111,7 @@ async function uploadXLSX(req, res){
             } else {
                 // If job_id does not exist, insert a new record.
                 const insertQuery = `
-                    INSERT INTO mission_statement (job_id, nama_job, deskripsi)
+                    INSERT INTO dlc (job_id, nama_job, deskripsi)
                     VALUES ($1, $2, $3) RETURNING *;
                 `;
                 await pool.query(insertQuery, [parseInt(row.job_id), row.nama_job, row.deskripsi]);
@@ -139,13 +139,13 @@ async function uploadXLSX(req, res){
 // Download XLSX (still under construction)
 async function downloadXLSX(req, res) {
     try {
-        console.log("🔍 Checking mission_statement table...");
+        console.log("🔍 Checking dlc table...");
 
-        // Fetch all data from the mission_statement table.
-        const result = await pool.query("SELECT * FROM mission_statement;");
+        // Fetch all data from the dlc table.
+        const result = await pool.query("SELECT * FROM dlc;");
 
         if (result.rows.length === 0) {
-            console.warn("⚠️ No data found in mission_statement table.");
+            console.warn("⚠️ No data found in dlc table.");
             return res.status(404).json({ error: "No records found to export." });
         }
 
@@ -155,7 +155,7 @@ async function downloadXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "MissionStatements");
 
         // Define the file path for the generated XLSX file.
-        const filePath = path.join(__dirname, "../downloads/mission_statements.xlsx");
+        const filePath = path.join(__dirname, "../downloads/dlcs.xlsx");
         if (!fs.existsSync(path.dirname(filePath))) {
             fs.mkdirSync(path.dirname(filePath), { recursive: true });
         }
@@ -165,7 +165,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download.
-        res.download(filePath, "mission_statements.xlsx", (err) => {
+        res.download(filePath, "dlcs.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -186,7 +186,7 @@ async function downloadXLSX(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-async function MSUpdate(req, res) {
+async function DLCUpdate(req, res) {
     const obj_id = parseInt(req.params.obj_id, 10);
     const { nama_job, deskripsi } = req.body;
 
@@ -199,7 +199,7 @@ async function MSUpdate(req, res) {
     try {
         // Update the mission statement in the database.
         const result = await pool.query(
-            `UPDATE mission_statement 
+            `UPDATE dlc 
              SET nama_job = $1, deskripsi = $2 
              WHERE obj_id = $3 RETURNING *`,
             [nama_job, deskripsi, obj_id]
@@ -223,10 +223,10 @@ async function MSUpdate(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-async function getAllMS(req, res) {
+async function getAllDLC(req, res) {
     try {
         // Fetch all mission statements.
-        const result = await pool.query(`SELECT * FROM mission_statement`);
+        const result = await pool.query(`SELECT * FROM dlc`);
         res.json(result.rows);
     } catch (error) {
         // Handle errors during data fetching.
@@ -241,12 +241,12 @@ async function getAllMS(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-async function getMSById(req, res) {
+async function getDLCById(req, res) {
     const { job_id } = req.params;
 
     try {
         // Fetch mission statement by job_id.
-        const result = await pool.query(`SELECT * FROM mission_statement WHERE job_id = $1`, [job_id]);
+        const result = await pool.query(`SELECT * FROM dlc WHERE job_id = $1`, [job_id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ error: "Mission statement not found" });
@@ -265,13 +265,13 @@ async function getMSById(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-async function deleteMS(req, res) {
+async function deleteDLC(req, res) {
     const { obj_id } = req.params;
 
     try {
         // Delete the mission statement.
         const result = await pool.query(
-            "DELETE FROM mission_statement WHERE obj_id = $1 RETURNING *",
+            "DELETE FROM dlc WHERE obj_id = $1 RETURNING *",
             [obj_id]
         );
 
@@ -305,7 +305,7 @@ async function downloadTemplateXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "Template");
 
         // Define the file path for the template.
-        const filePath = path.join(__dirname, "../downloads/mission_statement_template.xlsx");
+        const filePath = path.join(__dirname, "../downloads/dlc_template.xlsx");
 
         // Ensure the downloads directory exists.
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -317,7 +317,7 @@ async function downloadTemplateXLSX(req, res) {
         console.log(`✅ Template XLSX file created at ${filePath}`);
 
         // Send the template file for download.
-        res.download(filePath, "mission_statement_template.xlsx", (err) => {
+        res.download(filePath, "dlc_template.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the template" });
@@ -338,13 +338,13 @@ async function downloadTemplateXLSX(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-async function searchMS(req, res) {
+async function searchDLC(req, res) {
     const { search } = req.query;
 
     try {
         // Search mission statements based on the query.
         const result = await pool.query(
-            `SELECT * FROM mission_statement WHERE 
+            `SELECT * FROM dlc WHERE 
             CAST(job_id AS TEXT) ILIKE $1 OR 
             nama_job ILIKE $1 OR 
             deskripsi ILIKE $1`,
@@ -364,14 +364,14 @@ async function searchMS(req, res) {
 }
 
 module.exports = {
-    createMS,
-    MSUpdate,
-    getAllMS,
-    getMSById,
-    deleteMS,
+    createDLC,
+    DLCUpdate,
+    getAllDLC,
+    getDLCById,
+    deleteDLC,
     uploadXLSX,
     downloadXLSX,
     downloadTemplateXLSX,
-    searchMS,
+    searchDLC,
     upload
 };

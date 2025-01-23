@@ -6,6 +6,10 @@ const jaRoute = require('./Routes/jaRoute');
 const jrRoute = require('./Routes/jrRoute');
 const jpiRoute = require('./Routes/jpiRoute');
 const msRoute = require('./Routes/msRoute');
+const tcRoute = require('./Routes/tcRoute');
+const dlcRoute = require('./Routes/dlcRoute');
+const jpRoute = require('./Routes/jpRoute');
+const vbRoute = require('./Routes/vbRoute');
 const accountRoute = require('./Routes/accountRoute');
 const cjRoute = require('./Routes/createJobRoute');
 const mjRoute = require('./Routes/mappingRoute')
@@ -33,6 +37,10 @@ app.use('/jobdesc/ms', msRoute);
 app.use('/account', accountRoute);
 app.use('/job/cj', cjRoute);
 app.use('/job/mj', mjRoute);
+app.use('/jobreq/tc', tcRoute);
+app.use('/jobreq/dlc', dlcRoute);
+app.use('/jobreq/jp', jpRoute);
+app.use('/jobreq/vb', vbRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

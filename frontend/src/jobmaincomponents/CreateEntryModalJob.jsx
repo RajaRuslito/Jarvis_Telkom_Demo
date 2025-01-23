@@ -10,7 +10,7 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
             company_code: '',
             band: '',
             flag_mgr: '-',
-        },
+        }, 
         mj: {
             job_id: idAvailable || '',
             company_code: '',
@@ -31,7 +31,7 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
             ...prevState,
             [endpoint]: {
                 ...prevState[endpoint],
-                [name]: value,
+                [name]: name === 'band' ? value.toUpperCase() : value,
             },
         }));
     };
@@ -45,7 +45,7 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
         // Ensure job_id, nama_job, and deskripsi are filled
         const endpoint = activeItem.endpoint;
         if (endpoint === 'cj') {
-            if (!newEntry[endpoint].job_id || !newEntry[endpoint].nama_job || !newEntry[endpoint].job_prefix || !newEntry[endpoint].company_code || !newEntry[endpoint].band || !newEntry[endpoint].flag_mgr) {
+            if (!newEntry[endpoint].job_id || !newEntry[endpoint].nama_job || !newEntry[endpoint].job_prefix || !newEntry[endpoint].company_code || !newEntry[endpoint].band) {
                 alert('Please fill in all required fields.');
                 setIsSubmitting(false);
                 return;
@@ -118,7 +118,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                     <textarea
                                         type="text"
                                         name="job_prefix"
-                                        rows={8}
                                         value={newEntry.job_prefix}
                                         onChange={handleChange}
                                         required
@@ -129,7 +128,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                     <label className="text-black font-semibold">Company Code</label>
                                     <textarea
                                         name="company_code"
-                                        rows={8}
                                         value={newEntry.company_code}
                                         onChange={handleChange}
                                         required
@@ -139,9 +137,7 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                 <div className="flex flex-col gap-1">
                                     <label className="text-black font-semibold">Band Posisi</label>
                                     <textarea
-                                        type="text"
                                         name="band"
-                                        rows={8}
                                         value={newEntry.band}
                                         onChange={handleChange}
                                         required
@@ -151,19 +147,15 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                 <div className="flex flex-col gap-1">
                                     <label className="text-black font-semibold">Flag Managerial</label>
                                     <textarea
-                                        type="text"
                                         name="flag_mgr"
-                                        rows={8}
                                         value={newEntry.flag_mgr}
                                         onChange={handleChange}
-                                        required
                                         className="border border-gray-400 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-32 resize-y"
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label className="text-black font-semibold">Beginning Date</label>
                                     <input
-                                        type="text"
                                         name="begda"
                                         value={newEntry.befda}
                                         onChange={handleChange}
@@ -173,7 +165,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                 <div className="flex flex-col gap-1">
                                     <label className="text-black font-semibold">End Date</label>
                                     <input
-                                        type="text"
                                         name="endda"
                                         value={newEntry.endda}
                                         onChange={handleChange}
@@ -197,7 +188,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                 <div className="flex flex-col gap-1">
                                     <label className="text-black font-semibold">Short Posisi</label>
                                     <input
-                                        type="text"
                                         name="short_posisi"
                                         value={newEntry.short_posisi}
                                         onChange={handleChange}
@@ -209,7 +199,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                     <label className="text-black font-semibold">Company Code</label>
                                     <textarea
                                         name="company_code"
-                                        rows={8}
                                         value={newEntry.company_code}
                                         onChange={handleChange}
                                         required
@@ -220,7 +209,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                     <label className="text-black font-semibold">Obj Id Posisi</label>
                                     <textarea
                                         name="obid_posisi"
-                                        rows={8}
                                         value={newEntry.obid_posisi}
                                         onChange={handleChange}
                                         required
@@ -230,9 +218,7 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                 <div className="flex flex-col gap-1">
                                     <label className="text-black font-semibold">Nama Pemangku</label>
                                     <textarea
-                                        type="text"
                                         name="nama_pemangku"
-                                        rows={8}
                                         value={newEntry.nama_pemangku}
                                         onChange={handleChange}
                                         required
@@ -243,7 +229,6 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
                                     <label className="text-black font-semibold">NIK Pemangku</label>
                                     <textarea
                                         name="nik_pemangku"
-                                        rows={8}
                                         value={newEntry.nik_pemangku}
                                         onChange={handleChange}
                                         required

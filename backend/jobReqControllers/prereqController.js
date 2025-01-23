@@ -5,7 +5,7 @@ const xlsx = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 
-async function createJR(req, res) {
+async function createJP(req, res) {
     const job_id = parseInt(req.body.job_id, 10);
     const { nama_job, deskripsi } = req.body;
 
@@ -16,7 +16,7 @@ async function createJR(req, res) {
 
     try {
         // Check if job_id already exists
-        const checkQuery = `SELECT job_id FROM job_req WHERE job_id = $1`;
+        const checkQuery = `SELECT job_id FROM job_pre WHERE job_id = $1`;
         const existingJob = await pool.query(checkQuery, [job_id]);
 
         let operation;
@@ -25,7 +25,7 @@ async function createJR(req, res) {
         if (existingJob.rows.length > 0) {
             // Update existing job_id
             const updateQuery = `
-                UPDATE job_req
+                UPDATE job_pre
                 SET nama_job = $1, deskripsi = $2
                 WHERE job_id = $3
                 RETURNING *;
@@ -35,7 +35,7 @@ async function createJR(req, res) {
         } else {
             // Insert new job_id
             const insertQuery = `
-                INSERT INTO job_req (job_id, nama_job, deskripsi)
+                INSERT INTO job_pre (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3)
                 RETURNING *;
             `;
@@ -75,12 +75,12 @@ async function uploadXLSX(req, res) {
 
         for (const jobId of jobIds) {
             // Check if job_id exists
-            const checkQuery = `SELECT COUNT(*) FROM job_req WHERE job_id = $1`;
+            const checkQuery = `SELECT COUNT(*) FROM job_pre WHERE job_id = $1`;
             const { rows } = await pool.query(checkQuery, [jobId]);
 
             if (parseInt(rows[0].count) > 0) {
                 // Delete all existing entries for this job_id
-                const deleteQuery = `DELETE FROM job_req WHERE job_id = $1 RETURNING *`;
+                const deleteQuery = `DELETE FROM job_pre WHERE job_id = $1 RETURNING *`;
                 const deletedRows = await pool.query(deleteQuery, [jobId]);
                 deletedCount += deletedRows.rowCount;
                 console.log(`Deleted ${deletedRows.rowCount} entries for job_id: ${jobId}`);
@@ -95,7 +95,7 @@ async function uploadXLSX(req, res) {
             }
 
             const insertQuery = `
-                INSERT INTO job_req (job_id, nama_job, deskripsi)
+                INSERT INTO job_pre (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3) RETURNING *;
             `;
             await pool.query(insertQuery, [row.job_id, row.nama_job, row.deskripsi]);
@@ -120,17 +120,17 @@ async function uploadXLSX(req, res) {
 // Download XLSX masih belom bisa skip aja
 async function downloadXLSX(req, res) {
     try {
-        console.log("🔍 Checking job_req table...");
+        console.log("🔍 Checking job_pre table...");
         
         // Fetch data from the database
-        const result = await pool.query("SELECT * FROM job_req;");
+        const result = await pool.query("SELECT * FROM job_pre;");
         
         if (result.rows.length === 0) {
-            console.warn("⚠️ No data found in job_req table.");
+            console.warn("⚠️ No data found in job_pre table.");
             return res.status(404).json({ error: "No records found to export." }); // Adjusted error message
         }
 
-        console.log(`📝 Retrieved ${result.rows.length} records from job_req`);
+        console.log(`📝 Retrieved ${result.rows.length} records from job_pre`);
 
         // Convert data into worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
@@ -165,30 +165,30 @@ async function downloadXLSX(req, res) {
     }
 }
 
-async function jrUpdate(req, res) {
+async function jpUpdate(req, res) {
     const obj_id = parseInt(req.params.obj_id, 10);
     const { nama_job, deskripsi } = req.body;
     try {
         const result = await pool.query(
-            `UPDATE job_req 
+            `UPDATE job_pre 
              SET nama_job = $1, deskripsi = $2 
              WHERE obj_id = $3 RETURNING *`,
             [nama_job, deskripsi, obj_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'job_req not found' });
+            res.status(404).json({ error: 'job_pre not found' });
         } else {
             res.json(result.rows[0]);
         }
     } catch (error) {
-        console.error('Error updating job_req:', error);
-        res.status(500).json({ error: 'Error updating job_req' });
+        console.error('Error updating job_pre:', error);
+        res.status(500).json({ error: 'Error updating job_pre' });
     }
 }
 
-async function getAllJR(req, res) {
+async function getAllJP(req, res) {
     try {
-        const result = await pool.query(`SELECT * FROM job_req`);
+        const result = await pool.query(`SELECT * FROM job_pre`);
         res.json(result.rows);
     } catch (error) {
         console.error('Error getting Job Responsibilities:', error);
@@ -197,27 +197,27 @@ async function getAllJR(req, res) {
 }
 
 // Get report by ID
-async function getJRById(req, res) {
+async function getJPById(req, res) {
     const { job_id } = req.params;
     try {
-        const result = await pool.query(`SELECT * FROM job_req WHERE job_id = $1`, [job_id]);
+        const result = await pool.query(`SELECT * FROM job_pre WHERE job_id = $1`, [job_id]);
         if (result.rows.length === 0) {
             res.status(404).json({ error: 'Responsibilities not found' });
         } else {
             res.json(result.rows[0]);
         }
     } catch (error) {
-        console.error('Error getting job_req by ID:', error);
-        res.status(500).json({ error: 'Error getting job_req by ID' });
+        console.error('Error getting job_pre by ID:', error);
+        res.status(500).json({ error: 'Error getting job_pre by ID' });
     }
 }
 
-async function deleteJR(req, res) {
+async function deleteJP(req, res) {
     const { obj_id } = req.params;
 
     try {
         const result = await pool.query(
-            'DELETE FROM job_req WHERE obj_id = $1 RETURNING *',
+            'DELETE FROM job_pre WHERE obj_id = $1 RETURNING *',
             [obj_id]
         );
         if (result.rows.length === 0) {
@@ -271,12 +271,12 @@ async function downloadTemplateXLSX(req, res) {
     }
 }
 
-async function searchJR(req, res) {
+async function searchJP(req, res) {
     const { search } = req.query;
 
     try {
         const result = await pool.query(
-            `SELECT * FROM job_req WHERE 
+            `SELECT * FROM job_pre WHERE 
             CAST(job_id AS TEXT) ILIKE $1 OR 
             nama_job ILIKE $1 OR 
             deskripsi ILIKE $1`,
@@ -295,14 +295,14 @@ async function searchJR(req, res) {
 }
 
 module.exports = {
-    createJR,
-    jrUpdate,
-    getAllJR,
-    getJRById,
-    deleteJR,
+    createJP,
+    jpUpdate,
+    getAllJP,
+    getJPById,
+    deleteJP,
     uploadXLSX,
     downloadXLSX,
     downloadTemplateXLSX,
-    searchJR,
+    searchJP,
     upload
 };

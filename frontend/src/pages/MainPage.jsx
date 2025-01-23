@@ -61,7 +61,7 @@ const MainPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("account");
-    navigate("/login");
+    navigate("/");
   };
 
   // account logged handle
@@ -71,7 +71,7 @@ const MainPage = () => {
     console.log("Account Data:", accountData);
   } else {
     console.log("No account data found in localStorage");
-    navigate('/login')
+    navigate('/')
   }
 
 
@@ -300,6 +300,12 @@ const MainPage = () => {
               >
                 {!collapsed && <span className="ml-4">Job</span>}
               </li>
+              <li
+                className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
+                onClick={() => window.location.href = "/jobreq"}
+              >
+                {!collapsed && <span className="ml-4">Job Req</span>}
+              </li>
               <li className={`cursor-pointer flex items-center p-2 rounded-md hover:bg-blue-500 duration-300`}
                 onClick={() => window.location.href = "/profile"}
               >
@@ -397,18 +403,6 @@ const MainPage = () => {
                     onChange={handleSearchChange}
                     className="border p-2"
                   />
-                  {/* <button onClick={fetchJobs} className="bg-blue-500 text-white p-2 ml-2">
-                    Search
-                  </button>
-                  <ul>
-                    {jobs.map((job) => (
-                      <li key={job.job_id}>
-                        <h2>{job.nama_job}</h2>
-                        <p>{job.deskripsi}</p>
-                      </li>
-                    ))}
-                  </ul> */}
-
                 </div>
               </div>
 
