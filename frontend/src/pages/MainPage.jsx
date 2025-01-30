@@ -5,6 +5,8 @@ import CreateEntryModal from '../components/CreateEntryModal';
 import axios from 'axios';
 import profile from '../assets/profile.png'
 import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const MainPage = () => {
@@ -15,7 +17,7 @@ const MainPage = () => {
     { id: 1, title: 'Mission Statement', endpoint: 'ms', description: 'This is the mission statement of the company' },
     { id: 2, title: 'Job Responsibilities', endpoint: 'jr', description: 'This is the job responsibilities of the company' },
     { id: 3, title: 'Job Authorities', endpoint: 'ja', description: 'This is the job authorities of the company' },
-    { id: 4, title: 'Job Performance', endpoint: 'jpi', description: 'This is the job performance of the company' },
+    { id: 4, title: 'Job Performance Index', endpoint: 'jpi', description: 'This is the job performance of the company' },
   ];
 
   const [activeMenu, setActiveMenu] = useState(menu[0]);
@@ -34,7 +36,7 @@ const MainPage = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 10; // Jumlah entri per halaman
+  const [entriesPerPage, setEntriesPerPage] = useState(10); // Jumlah entri per halaman
   const [totalEntries, setTotalEntries] = useState(0);
   const startIndex = (currentPage - 1) * entriesPerPage;
   const endIndex = startIndex + entriesPerPage;
@@ -131,7 +133,16 @@ const MainPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      alert(response.data.message || 'File uploaded successfully');
+      const { message, deleted, inserted } = response.data;
+
+      // Trigger notifications
+      toast.success(`${message}`);
+      if (deleted > 0) {
+        toast.info(`${deleted} entries deleted.`);
+      }
+      if (inserted > 0) {
+        toast.success(`${inserted} entries inserted.`);
+      }
     } catch (error) {
       console.error('Error uploading file:', error.message);
       alert(error.response?.data?.error || 'Failed to upload the file');
@@ -196,6 +207,23 @@ const MainPage = () => {
     }
   };
 
+  const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+
+  const handlePageChange = (page) => {
+    const totalPages = Math.ceil(totalEntries / entriesPerPage);
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleEntriesPerPageChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (value > 0) {
+      setEntriesPerPage(value);
+      setCurrentPage(1); // Reset to the first page to avoid out-of-range issues
+    }
+  };
+
   const renderPagination = () => {
     const totalPages = Math.ceil(filteredData.length / entriesPerPage);
     return (
@@ -226,22 +254,17 @@ const MainPage = () => {
       </div>
     );
   };
-  
 
-  const paginatedData = data.slice(
+
+  const paginatedData = filteredData.slice(
     (currentPage - 1) * entriesPerPage,
     currentPage * entriesPerPage
   );
 
-  const handlePageChange = (page) => {
-    const totalPages = Math.ceil(totalEntries / entriesPerPage);
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
 
   return (
     <>
+    <ToastContainer />
       <header className="bg-white shadow flex items-center justify-between py-4 px-6">
         {/* Left: Title */}
         <h1
@@ -352,22 +375,22 @@ const MainPage = () => {
                 <div>
                   <p className='text-black font-semibold text-xl'>{activeMenu.title} DJM</p>
                   <div className='flex gap-2 mt-5'>
-                  {(accountData.roles === "Admin" || accountData.roles === "Super Admin") && (
-                    <div className='flex gap-2'>                    
-                      <button
-                        className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
-                        onClick={() => setCreateModalOpened(true)}
-                      >
-                        Create
-                      </button>
-                      <button
-                        className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
-                        onClick={() => document.getElementById('fileUpload').click()}
-                      >
-                        Upload
-                      </button>
-                    </div>
-                  )}
+                    {(accountData.roles === "Admin" || accountData.roles === "Super Admin") && (
+                      <div className='flex gap-2'>
+                        <button
+                          className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
+                          onClick={() => setCreateModalOpened(true)}
+                        >
+                          Create
+                        </button>
+                        <button
+                          className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
+                          onClick={() => document.getElementById('fileUpload').click()}
+                        >
+                          Upload
+                        </button>
+                      </div>
+                    )}
                     <button
                       className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
                       onClick={handleFileDownloadTemplate}
@@ -383,9 +406,15 @@ const MainPage = () => {
                     onChange={(e) => handleFileUpload(e.target.files[0])}
                   />
                   <div className='flex gap-2 mt-5'>
-                    <p className='font-semibold text-black'>Showing</p>
-                    <div className='border border-black px-3 font-bold text-lg'>{totalEntries}</div>
-                    <p className='font-semibold text-black'>Entries</p>
+                    <p className="font-semibold text-black">Showing</p>
+                    <input
+                      type="number"
+                      min="1"
+                      value={entriesPerPage}
+                      onChange={handleEntriesPerPageChange}
+                      className="border border-black px-2 text-center w-16"
+                    />
+                    <p className="font-semibold text-black">entries out of {totalEntries} entries</p>
                   </div>
                 </div>
                 <div className='flex flex-col gap-3 items-end'>
@@ -425,7 +454,7 @@ const MainPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {currentData &&
+                      {filteredData &&
                         currentData.map((item, index) => (
                           <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                             <td className="px-4 py-2">{startIndex + index + 1}</td>

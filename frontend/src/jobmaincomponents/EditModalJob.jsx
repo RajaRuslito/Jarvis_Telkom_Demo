@@ -6,7 +6,7 @@ const EditModalJob = ({ entryData, activeItem, onClose }) => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState(null);
 
-    const baseUrl = `http://localhost:5000/job/${activeItem.endpoint}`;
+    const baseUrl = `http://localhost:5000/job/${activeItem}`;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -21,13 +21,13 @@ const EditModalJob = ({ entryData, activeItem, onClose }) => {
         setError(null); // Reset error state before attempting update
 
         // Validate fields based on endpoint
-        if (activeItem.endpoint === 'cj') {
+        if (activeItem === 'cj') {
             if (!currentEntry.nama_job || !currentEntry.job_prefix) {
                 setError('Please fill in all required fields for CJ.');
                 setIsUpdating(false);
                 return;
             }
-        } else if (activeItem.endpoint === 'mj') {
+        } else if (activeItem === 'mj') {
             if (!currentEntry.short_posisi || !currentEntry.nama_pemangku) { // Replace "some_mj_field" with the actual field(s) for 'mj'
                 setError('Please fill in all required fields for MJ.');
                 setIsUpdating(false);
@@ -42,7 +42,7 @@ const EditModalJob = ({ entryData, activeItem, onClose }) => {
         try {
             const response = await axios.put(
                 `${baseUrl}/${currentEntry.obj_id}/update`,
-                activeItem.endpoint === 'cj'
+                activeItem === 'cj'
                     ? {
                         nama_job: currentEntry.nama_job,
                         job_prefix: currentEntry.job_prefix,
@@ -54,6 +54,7 @@ const EditModalJob = ({ entryData, activeItem, onClose }) => {
                         endda: currentEntry.endda,
                     }
                     : {
+                        job_id: currentEntry.job_id,
                         nama_job: currentEntry.nama_job,
                         short_posisi: currentEntry.short_posisi,
                         company_code: currentEntry.company_code,

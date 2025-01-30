@@ -5,6 +5,8 @@ import CreateEntryModalJob from '../jobmaincomponents/CreateEntryModalJob';
 import axios from 'axios';
 import profile from '../assets/profile.png'
 import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const MainPage = () => {
@@ -45,6 +47,8 @@ const MainPage = () => {
   };
 
 
+
+
   const [activeMenu, setActiveMenu] = useState(menu[0]);
   const [data, setData] = useState([]);
   const [maxJobId, setMaxJobId] = useState(0);
@@ -61,7 +65,8 @@ const MainPage = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 10; // Jumlah entri per halaman
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  // Jumlah entri per halaman
   const [totalEntries, setTotalEntries] = useState(0);
   const startIndex = (currentPage - 1) * entriesPerPage;
   const endIndex = startIndex + entriesPerPage;
@@ -95,7 +100,7 @@ const MainPage = () => {
     }
     return false;
   });
-  
+
 
   const currentData = filteredData.slice(
     (currentPage - 1) * entriesPerPage,
@@ -174,12 +179,23 @@ const MainPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      alert(response.data.message || 'File uploaded successfully');
+      const { message, deleted, inserted } = response.data;
+
+      // Display notifications
+      toast.success(`${message}`, { position: 'top-right' });
+      if (deleted > 0) {
+        toast.info(`${deleted} entries deleted.`, { position: 'top-right' });
+      }
+      if (inserted > 0) {
+        toast.success(`${inserted} entries inserted.`, { position: 'top-right' });
+      }
     } catch (error) {
       console.error('Error uploading file:', error.message);
-      alert(error.response?.data?.error || 'Failed to upload the file');
+      toast.error(error.response?.data?.error || 'Failed to upload the file', { position: 'top-right' });
     }
   };
+
+
 
   const [jobs, setJobs] = useState([]);
 
@@ -269,9 +285,10 @@ const MainPage = () => {
       </div>
     );
   };
-  
 
-  const paginatedData = data.slice(
+  const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+
+  const paginatedData = filteredData.slice(
     (currentPage - 1) * entriesPerPage,
     currentPage * entriesPerPage
   );
@@ -281,6 +298,24 @@ const MainPage = () => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const handleEntriesPerPageChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (value > 0) {
+      setEntriesPerPage(value);
+      setCurrentPage(1); // Reset to the first page to avoid out-of-range issues
+    }
+  };
+
+  const renderTableHeaders = () => {
+    return tableHeaders[activeMenu.endpoint]
+      .filter(header => accountData?.roles !== 'User' || header.title !== 'Action')
+      .map((header, index) => (
+        <th key={index} className="px-4 py-2 text-left font-medium">
+          {header.title}
+        </th>
+      ));
   };
 
   const renderTableRows = (data) => {
@@ -333,6 +368,7 @@ const MainPage = () => {
 
   return (
     <>
+      <ToastContainer />
       <header className="bg-white shadow flex items-center justify-between py-4 px-6">
         {/* Left: Title */}
         <h1
@@ -443,22 +479,22 @@ const MainPage = () => {
                 <div>
                   <p className='text-black font-semibold text-xl'>{activeMenu.title} DJM</p>
                   <div className='flex gap-2 mt-5'>
-                  {(accountData.roles === "Admin" || accountData.roles === "Super Admin") && (
-                    <div className='flex gap-2'>                    
-                      <button
-                        className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
-                        onClick={() => setCreateModalOpened(true)}
-                      >
-                        Create
-                      </button>
-                      <button
-                        className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
-                        onClick={() => document.getElementById('fileUpload').click()}
-                      >
-                        Upload
-                      </button>
-                    </div>
-                  )}
+                    {(accountData.roles === "Admin" || accountData.roles === "Super Admin") && (
+                      <div className='flex gap-2'>
+                        <button
+                          className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
+                          onClick={() => setCreateModalOpened(true)}
+                        >
+                          Create
+                        </button>
+                        <button
+                          className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
+                          onClick={() => document.getElementById('fileUpload').click()}
+                        >
+                          Upload
+                        </button>
+                      </div>
+                    )}
                     <button
                       className='bg-blue-400 px-5 py-0.5 rounded-lg text-white hover:scale-110 duration-300 hover:bg-blue-500'
                       onClick={handleFileDownloadTemplate}
@@ -466,17 +502,24 @@ const MainPage = () => {
                       Download Template
                     </button>
                   </div>
-                  <input
-                    type='file'
-                    id='fileUpload'
-                    accept='.xlsx'
-                    className='hidden'
-                    onChange={(e) => handleFileUpload(e.target.files[0])}
-                  />
-                  <div className='flex gap-2 mt-5'>
-                    <p className='font-semibold text-black'>Showing</p>
-                    <div className='border border-black px-3 font-bold text-lg'>{totalEntries}</div>
-                    <p className='font-semibold text-black'>Entries</p>
+                  <div className="flex gap-2 mt-5">
+
+                    <input
+                      type='file'
+                      id='fileUpload'
+                      accept='.xlsx'
+                      className='hidden'
+                      onChange={(e) => handleFileUpload(e.target.files[0])}
+                    />
+                    <p className="font-semibold text-black">Showing</p>
+                    <input
+                      type="number"
+                      min="1"
+                      value={entriesPerPage}
+                      onChange={handleEntriesPerPageChange}
+                      className="border border-black px-2 text-center w-16"
+                    />
+                    <p className="font-semibold text-black">entries out of {totalEntries} entries</p>
                   </div>
                 </div>
                 <div className='flex flex-col gap-3 items-end'>
@@ -516,11 +559,7 @@ const MainPage = () => {
                 <table className="w-full table-auto border-collapse">
                   <thead className="bg-gray-300">
                     <tr>
-                      {tableHeaders[activeMenu.endpoint]?.map((header, idx) => (
-                        <th key={idx} className="px-4 py-2 border-b text-left font-semibold">
-                          {header.title}
-                        </th>
-                      ))}
+                    {renderTableHeaders()}
                     </tr>
                   </thead>
                   <tbody>
@@ -536,13 +575,16 @@ const MainPage = () => {
                           {error}
                         </td>
                       </tr>
+
                     ) : (
-                      renderTableRows(filteredData)
+                      renderTableRows(currentData)
+
+
                     )}
                   </tbody>
                 </table>
               </div>
-              
+
               {renderPagination()}
             </div>
           </div>
