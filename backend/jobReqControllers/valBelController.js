@@ -7,7 +7,7 @@ const fs = require("fs");  // File system module for handling file operations
 const path = require("path");  // Path module for working with file paths
 
 /**
- * Create or update job authorities (JobAuth) record in the database.
+ * Create or update Value and Beliefs (JobAuth) record in the database.
  * 
  * @param {Object} req - The request object, containing the job details.
  * @param {Object} res - The response object used to send responses back.
@@ -51,15 +51,15 @@ async function createVB(req, res) {
             operation = "created";
         }
 
-        console.log(`✅ Job Authorities ${operation} for job_id: ${job_id}`);
+        console.log(`✅ Value and Beliefs ${operation} for job_id: ${job_id}`);
         res.status(201).json({
             success: true,
-            message: `Job Authorities ${operation} successfully`,
+            message: `Value and Beliefs ${operation} successfully`,
             data: result.rows[0],
         });
 
     } catch (error) {
-        console.error("Error creating Job Authorities:", error.message);
+        console.error("Error creating Value and Beliefs:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -153,10 +153,10 @@ async function downloadXLSX(req, res) {
         // Convert data into worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
         const workbook = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(workbook, worksheet, "JobAuthorities");
+        xlsx.utils.book_append_sheet(workbook, worksheet, "ValueBeliefs");
 
         // Define file path
-        const filePath = path.join(__dirname, "../downloads/val_belorities.xlsx");
+        const filePath = path.join(__dirname, "../downloads/val_bel.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -168,7 +168,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "val_belorities.xlsx", (err) => {
+        res.download(filePath, "val_bel.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -184,7 +184,7 @@ async function downloadXLSX(req, res) {
 }
 
 /**
- * Update job authorities by obj_id.
+ * Update Value and Beliefs by obj_id.
  * 
  * @param {Object} req - The request object, containing the job ID and data to update.
  * @param {Object} res - The response object used to send responses back.
@@ -217,7 +217,7 @@ async function vbUpdate(req, res) {
 }
 
 /**
- * Retrieve all job authorities records.
+ * Retrieve all Value and Beliefs records.
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object used to send the records back.
@@ -227,13 +227,13 @@ async function getAllVB(req, res) {
         const result = await pool.query(`SELECT * FROM val_bel`);
         res.json(result.rows);
     } catch (error) {
-        console.error('Error getting Job Authorities:', error);
-        res.status(500).json({ error: 'Error getting Job Authorities' });
+        console.error('Error getting Value and Beliefs:', error);
+        res.status(500).json({ error: 'Error getting Value and Beliefs' });
     }
 }
 
 /**
- * Retrieve job authorities record by job_id.
+ * Retrieve Value and Beliefs record by job_id.
  * 
  * @param {Object} req - The request object containing job_id as parameter.
  * @param {Object} res - The response object used to send the record back.
@@ -254,7 +254,7 @@ async function getVBById(req, res) {
 }
 
 /**
- * Delete job authorities record by job_id.
+ * Delete Value and Beliefs record by job_id.
  * 
  * @param {Object} req - The request object containing job_id as parameter.
  * @param {Object} res - The response object used to send success or error response.
@@ -268,18 +268,18 @@ async function deleteVB(req, res) {
             [job_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Job Authorities not found' });
+            res.status(404).json({ error: 'Value and Beliefs not found' });
         } else {
-            res.json({ message: 'Job Authorities deleted successfully' });
+            res.json({ message: 'Value and Beliefs deleted successfully' });
         }
     } catch (error) {
-        console.error('Error deleting Job Authorities:', error);
-        res.status(500).json({ error: 'Error deleting Job Authorities' });
+        console.error('Error deleting Value and Beliefs:', error);
+        res.status(500).json({ error: 'Error deleting Value and Beliefs' });
     }
 }
 
 /**
- * Download an empty template XLSX file for job authorities.
+ * Download an empty template XLSX file for Value and Beliefs.
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object used to send the template file for download.
@@ -297,7 +297,7 @@ async function downloadTemplateXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "Template");
 
         // Define file path for the template
-        const filePath = path.join(__dirname, "../downloads/val_belorities_template.xlsx");
+        const filePath = path.join(__dirname, "../downloads/val_bel_template.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -309,7 +309,7 @@ async function downloadTemplateXLSX(req, res) {
         console.log(`✅ Template XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "val_belorities_template.xlsx", (err) => {
+        res.download(filePath, "val_bel_template.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the template" });
@@ -324,7 +324,7 @@ async function downloadTemplateXLSX(req, res) {
 }
 
 /**
- * Search for job authorities records based on a query string.
+ * Search for Value and Beliefs records based on a query string.
  * 
  * @param {Object} req - The request object containing the search query.
  * @param {Object} res - The response object used to send the matching records back.
@@ -342,13 +342,13 @@ async function searchVB(req, res) {
         );
 
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'No matching Job Authorities found' });
+            res.status(404).json({ error: 'No matching Value and Beliefs found' });
         } else {
             res.json(result.rows);
         }
     } catch (error) {
-        console.error('Error fetching Job Authorities:', error);
-        res.status(500).json({ error: 'Error fetching Job Authorities' });
+        console.error('Error fetching Value and Beliefs:', error);
+        res.status(500).json({ error: 'Error fetching Value and Beliefs' });
     }
 }
 

@@ -34,7 +34,7 @@ const CreateEntryModal = ({ activeItem, onClose, idAvailable }) => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/jobreq/${activeItem.endpoint}/create`,
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeItem.endpoint}/create`,
         newEntry
       );
 

@@ -10,7 +10,7 @@ const Register = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
-    const baseUrl = "http://localhost:5000/account"; // Backend base URL
+    const baseUrl = `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/account`; // Backend base URL
 
     const handleRegister = async (e) => {
         e.preventDefault();

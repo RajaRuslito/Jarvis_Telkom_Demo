@@ -43,15 +43,15 @@ async function createJP(req, res) {
             operation = "created";
         }
 
-        console.log(`✅ Job Responsibilities ${operation} for job_id: ${job_id}`);
+        console.log(`✅ Pre Requisition ${operation} for job_id: ${job_id}`);
         res.status(201).json({
             success: true,
-            message: `Job Responsibilities ${operation} successfully`,
+            message: `Pre Requisition ${operation} successfully`,
             data: result.rows[0],
         });
 
     } catch (error) {
-        console.error("Error creating Job Responsibilities:", error.message);
+        console.error("Error creating Pre Requisition:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -135,10 +135,10 @@ async function downloadXLSX(req, res) {
         // Convert data into worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
         const workbook = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(workbook, worksheet, "JobRequirement");
+        xlsx.utils.book_append_sheet(workbook, worksheet, "JobPreRequisite");
 
         // Define file path
-        const filePath = path.join(__dirname, "../downloads/job_responsibilities.xlsx");
+        const filePath = path.join(__dirname, "../downloads/job_prereq.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -150,7 +150,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_responsibilities.xlsx", (err) => {
+        res.download(filePath, "job_prereq.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -191,8 +191,8 @@ async function getAllJP(req, res) {
         const result = await pool.query(`SELECT * FROM job_pre`);
         res.json(result.rows);
     } catch (error) {
-        console.error('Error getting Job Responsibilities:', error);
-        res.status(500).json({ error: 'Error getting Job Responsibilities' });
+        console.error('Error getting Pre Requisition:', error);
+        res.status(500).json({ error: 'Error getting Pre Requisition' });
     }
 }
 
@@ -202,7 +202,7 @@ async function getJPById(req, res) {
     try {
         const result = await pool.query(`SELECT * FROM job_pre WHERE job_id = $1`, [job_id]);
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Responsibilities not found' });
+            res.status(404).json({ error: 'Pre Requisition not found' });
         } else {
             res.json(result.rows[0]);
         }
@@ -221,13 +221,13 @@ async function deleteJP(req, res) {
             [obj_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Job Responsibilities not found' });
+            res.status(404).json({ error: 'Pre Requisition not found' });
         } else {
-            res.json({ message: 'Job Responsibilities deleted successfully' });
+            res.json({ message: 'Pre Requisition deleted successfully' });
         }
     } catch (error) {
-        console.error('Error deleting Job Responsibilities:', error);
-        res.status(500).json({ error: 'Error deleting Job Responsibilities' });
+        console.error('Error deleting Pre Requisition:', error);
+        res.status(500).json({ error: 'Error deleting Pre Requisition' });
     }
 }
 
@@ -245,7 +245,7 @@ async function downloadTemplateXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "Template");
 
         // Define file path for the template
-        const filePath = path.join(__dirname, "../downloads/job_responsibilities_template.xlsx");
+        const filePath = path.join(__dirname, "../downloads/job_prereq_template.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -257,7 +257,7 @@ async function downloadTemplateXLSX(req, res) {
         console.log(`✅ Template XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_responsibilities_template.xlsx", (err) => {
+        res.download(filePath, "job_prereq_template.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the template" });
@@ -284,13 +284,13 @@ async function searchJP(req, res) {
         );
 
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'No matching Job Responsibilities found' });
+            res.status(404).json({ error: 'No matching Pre Requisition found' });
         } else {
             res.json(result.rows);
         }
     } catch (error) {
-        console.error('Error fetching Job Responsibilities:', error);
-        res.status(500).json({ error: 'Error fetching Job Responsibilities' });
+        console.error('Error fetching Pre Requisition:', error);
+        res.status(500).json({ error: 'Error fetching Pre Requisition' });
     }
 }
 

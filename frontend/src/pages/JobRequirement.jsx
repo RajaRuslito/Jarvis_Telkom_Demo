@@ -83,7 +83,7 @@ const MainPage = () => {
       setLoading(true); // Set loading to true
       setError(null); // Reset any previous errors
       try {
-        const response = await fetch(`http://localhost:5000/jobreq/${activeMenu.endpoint}/`);
+        const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/`);
         if (!response.ok) {
           throw new Error('Data not found');
         }
@@ -128,7 +128,7 @@ const MainPage = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post(`http://localhost:5000/jobreq/${activeMenu.endpoint}/upload-xlsx`, formData, {
+      const response = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/upload-xlsx`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -153,7 +153,7 @@ const MainPage = () => {
   const fetchJobs = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/jobreq/${activeMenu.endpoint}/all/search?search=${searchTerm}`
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/all/search?search=${searchTerm}`
       );
       setJobs(response.data);
     } catch (error) {
@@ -168,7 +168,7 @@ const MainPage = () => {
 
   const handleFileDownload = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/jobreq/${activeMenu.endpoint}/all/download`, {
+      const response = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/all/download`, {
         responseType: 'blob',
       });
 
@@ -188,7 +188,7 @@ const MainPage = () => {
 
   const handleFileDownloadTemplate = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/jobreq/${activeMenu.endpoint}/all/download-template`, {
+      const response = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/all/download-template`, {
         responseType: 'blob',
       });
 

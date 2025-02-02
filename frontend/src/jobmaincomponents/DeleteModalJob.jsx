@@ -5,7 +5,7 @@ const DeleteModalJob = ({ entryData, activeItem, onClose }) => {
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/job/${activeItem.endpoint}/${entryData.obj_id}/delete`
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/job/${activeItem.endpoint}/${entryData.obj_id}/delete`
       );
 
       if (response.status === 200) {

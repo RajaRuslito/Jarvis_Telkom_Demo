@@ -6,7 +6,7 @@ const EditModalJob = ({ entryData, activeItem, onClose }) => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState(null);
 
-    const baseUrl = `http://localhost:5000/job/${activeItem}`;
+    const baseUrl = `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/job/${activeItem}`;
 
     const handleChange = (e) => {
         const { name, value } = e.target;

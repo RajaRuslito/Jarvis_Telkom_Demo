@@ -43,15 +43,15 @@ async function createJC(req, res) {
             operation = "created";
         }
 
-        console.log(`✅ Job Responsibilities ${operation} for job_id: ${job_id}`);
+        console.log(`✅ Jobs ${operation} for job_id: ${job_id}`);
         res.status(201).json({
             success: true,
-            message: `Job Responsibilities ${operation} successfully`,
+            message: `Jobs ${operation} successfully`,
             data: result.rows[0],
         });
 
     } catch (error) {
-        console.error("Error creating Job Responsibilities:", error.message);
+        console.error("Error creating Jobs:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -95,6 +95,8 @@ async function uploadXLSX(req, res) {
                 continue;
             }
 
+            row.band = row.band.toUpperCase();
+            
             const insertQuery = `
                 INSERT INTO create_job (job_id, job_prefix, company_code, nama_job, band, flag_mgr)
                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
@@ -122,25 +124,25 @@ async function uploadXLSX(req, res) {
 // Download XLSX masih belom bisa skip aja
 async function downloadXLSX(req, res) {
     try {
-        console.log("🔍 Checking job_req table...");
+        console.log("🔍 Checking create_job table...");
         
         // Fetch data from the database
-        const result = await pool.query("SELECT * FROM job_req;");
+        const result = await pool.query("SELECT * FROM create_job;");
         
         if (result.rows.length === 0) {
-            console.warn("⚠️ No data found in job_req table.");
+            console.warn("⚠️ No data found in create_job table.");
             return res.status(404).json({ error: "No records found to export." }); // Adjusted error message
         }
 
-        console.log(`📝 Retrieved ${result.rows.length} records from job_req`);
+        console.log(`📝 Retrieved ${result.rows.length} records from create_job`);
 
         // Convert data into worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
         const workbook = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(workbook, worksheet, "JobRequirement");
+        xlsx.utils.book_append_sheet(workbook, worksheet, "Jobs");
 
         // Define file path
-        const filePath = path.join(__dirname, "../downloads/job_responsibilities.xlsx");
+        const filePath = path.join(__dirname, "../downloads/jobs.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -152,7 +154,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_responsibilities.xlsx", (err) => {
+        res.download(filePath, "jobs.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -178,13 +180,13 @@ async function jcUpdate(req, res) {
             [job_prefix, company_code, nama_job, band, flag_mgr, obj_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Job Responsibilities not found' });
+            res.status(404).json({ error: 'Job not found' });
         } else {
             res.json(result.rows[0]);
         }
     } catch (error) {
-        console.error('Error updating job_req:', error);
-        res.status(500).json({ error: 'Error updating job_req' });
+        console.error('Error updating create_job:', error);
+        res.status(500).json({ error: 'Error updating create_job' });
     }
 }
 
@@ -210,8 +212,8 @@ async function getJCById(req, res) {
             res.json(result.rows[0]);
         }
     } catch (error) {
-        console.error('Error getting job_req by ID:', error);
-        res.status(500).json({ error: 'Error getting job_req by ID' });
+        console.error('Error getting create_job by ID:', error);
+        res.status(500).json({ error: 'Error getting create_job by ID' });
     }
 }
 
@@ -225,13 +227,13 @@ async function deleteJC(req, res) {
             [obj_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Job Responsibilities not found' });
+            res.status(404).json({ error: 'Jobs not found' });
         } else {
-            res.json({ message: 'Job Responsibilities deleted successfully' });
+            res.json({ message: 'Jobs deleted successfully' });
         }
     } catch (error) {
-        console.error('Error deleting Job Responsibilities:', error);
-        res.status(500).json({ error: 'Error deleting Job Responsibilities' });
+        console.error('Error deleting Jobs:', error);
+        res.status(500).json({ error: 'Error deleting Jobs' });
     }
 }
 
@@ -249,7 +251,7 @@ async function downloadTemplateXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "Template");
 
         // Define file path for the template
-        const filePath = path.join(__dirname, "../downloads/job_responsibilities_template.xlsx");
+        const filePath = path.join(__dirname, "../downloads/jobs_template.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -261,7 +263,7 @@ async function downloadTemplateXLSX(req, res) {
         console.log(`✅ Template XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "job_responsibilities_template.xlsx", (err) => {
+        res.download(filePath, "jobs_template.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the template" });
@@ -289,13 +291,13 @@ async function searchJC(req, res) {
         );
 
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'No matching Job Responsibilities found' });
+            res.status(404).json({ error: 'No matching Jobs found' });
         } else {
             res.json(result.rows);
         }
     } catch (error) {
-        console.error('Error fetching Job Responsibilities:', error);
-        res.status(500).json({ error: 'Error fetching Job Responsibilities' });
+        console.error('Error fetching Jobs:', error);
+        res.status(500).json({ error: 'Error fetching Jobs' });
     }
 }
 

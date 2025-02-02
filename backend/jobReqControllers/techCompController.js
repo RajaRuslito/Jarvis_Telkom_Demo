@@ -6,7 +6,7 @@ const xlsx = require("xlsx"); // Library for handling XLSX files (reading and wr
 const fs = require("fs"); // File system module for interacting with the file system
 const path = require("path"); // Path module for working with file paths
 
-// Function to create or update Job Performance Indicator (JPI)
+// Function to create or update Technical Competencies Indicator (JPI)
 async function createTC(req, res) {
     // Extract job_id, nama_job, and deskripsi from the request body
     const job_id = parseInt(req.body.job_id, 10);
@@ -48,16 +48,16 @@ async function createTC(req, res) {
         }
 
         // Log success message and send response with created/updated data
-        console.log(`✅ Job Performance Indicator ${operation} for job_id: ${job_id}`);
+        console.log(`✅ Technical Competencies Indicator ${operation} for job_id: ${job_id}`);
         res.status(201).json({
             success: true,
-            message: `Job Performance Indicator ${operation} successfully`,
+            message: `Technical Competencies Indicator ${operation} successfully`,
             data: result.rows[0],
         });
 
     } catch (error) {
         // Handle errors and respond with status 500
-        console.error("Error creating Job Performance Indicator:", error.message);
+        console.error("Error creating Technical Competencies Indicator:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -148,10 +148,10 @@ async function downloadXLSX(req, res) {
         // Convert data into a worksheet
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
         const workbook = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(workbook, worksheet, "JobPerformanceIndicator");
+        xlsx.utils.book_append_sheet(workbook, worksheet, "TechnicalCompetencies");
 
         // Define file path for the generated XLSX file
-        const filePath = path.join(__dirname, "../downloads/tc.xlsx");
+        const filePath = path.join(__dirname, "../downloads/technical_competencies.xlsx");
 
         // Ensure the directory exists before writing the file
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -163,7 +163,7 @@ async function downloadXLSX(req, res) {
         console.log(`✅ XLSX file created at ${filePath}`);
 
         // Send the file for download
-        res.download(filePath, "tc.xlsx", (err) => {
+        res.download(filePath, "technical_competencies.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the file" });
@@ -179,7 +179,7 @@ async function downloadXLSX(req, res) {
     }
 }
 
-// Function to update a Job Performance Indicator (JPI) by obj_id
+// Function to update a Technical Competencies Indicator (JPI) by obj_id
 async function tcUpdate(req, res) {
     const obj_id = parseInt(req.params.obj_id, 10);
     const { nama_job, deskripsi } = req.body;
@@ -201,24 +201,24 @@ async function tcUpdate(req, res) {
         }
     } catch (error) {
         // Handle errors and respond with status 500
-        console.error('Error updating Job Performance Index:', error);
-        res.status(500).json({ error: 'Error updating Job Performance Index' });
+        console.error('Error updating Technical Competencies:', error);
+        res.status(500).json({ error: 'Error updating Technical Competencies' });
     }
 }
 
-// Function to fetch all Job Performance Indicators (JPIs)
+// Function to fetch all Technical Competencies Indicators (JPIs)
 async function getAllTC(req, res) {
     try {
         const result = await pool.query(`SELECT * FROM tc`);
         res.json(result.rows);
     } catch (error) {
         // Handle errors and respond with status 500
-        console.error('Error getting Job Performance Index:', error);
-        res.status(500).json({ error: 'Error getting Job Performance Index' });
+        console.error('Error getting Technical Competencies:', error);
+        res.status(500).json({ error: 'Error getting Technical Competencies' });
     }
 }
 
-// Function to fetch a Job Performance Indicator by job_id
+// Function to fetch a Technical Competencies Indicator by job_id
 async function getTCById(req, res) {
     const { job_id } = req.params;
     try {
@@ -235,7 +235,7 @@ async function getTCById(req, res) {
     }
 }
 
-// Function to delete a Job Performance Indicator by obj_id
+// Function to delete a Technical Competencies Indicator by obj_id
 async function deleteTC(req, res) {
     const { obj_id } = req.params;
 
@@ -245,18 +245,18 @@ async function deleteTC(req, res) {
             [obj_id]
         );
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Job Performance Index not found' });
+            res.status(404).json({ error: 'Technical Competencies not found' });
         } else {
-            res.json({ message: 'Job Performance Index deleted successfully' });
+            res.json({ message: 'Technical Competencies deleted successfully' });
         }
     } catch (error) {
         // Handle errors and respond with status 500
-        console.error('Error deleting Job Performance Index:', error);
-        res.status(500).json({ error: 'Error deleting Job Performance Index' });
+        console.error('Error deleting Technical Competencies:', error);
+        res.status(500).json({ error: 'Error deleting Technical Competencies' });
     }
 }
 
-// Function to search Job Performance Indicators by search query
+// Function to search Technical Competencies Indicators by search query
 async function searchTC(req, res) {
     const { search } = req.query;
 
@@ -270,18 +270,18 @@ async function searchTC(req, res) {
         );
 
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'No matching Job Performance Index found' });
+            res.status(404).json({ error: 'No matching Technical Competencies found' });
         } else {
             res.json(result.rows);
         }
     } catch (error) {
         // Handle errors and respond with status 500
-        console.error('Error fetching Job Performance Index:', error);
-        res.status(500).json({ error: 'Error fetching Job Performance Index' });
+        console.error('Error fetching Technical Competencies:', error);
+        res.status(500).json({ error: 'Error fetching Technical Competencies' });
     }
 }
 
-// Function to download an XLSX template for Job Performance Indicator uploads
+// Function to download an XLSX template for Technical Competencies Indicator uploads
 async function downloadTemplateXLSX(req, res) {
     try {
         // Define the template data (columns without content)
@@ -295,7 +295,7 @@ async function downloadTemplateXLSX(req, res) {
         xlsx.utils.book_append_sheet(workbook, worksheet, "Template");
 
         // Define file path for the template
-        const filePath = path.join(__dirname, "../downloads/job_performance_indicator_template.xlsx");
+        const filePath = path.join(__dirname, "../downloads/technical_competencies_template.xlsx");
 
         // Ensure the downloads directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
@@ -307,7 +307,7 @@ async function downloadTemplateXLSX(req, res) {
         console.log(`✅ Template XLSX file created at ${filePath}`);
 
         // Send the template file for download
-        res.download(filePath, "job_performance_indicator_template.xlsx", (err) => {
+        res.download(filePath, "technical_competencies_template.xlsx", (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ error: "Error downloading the template" });

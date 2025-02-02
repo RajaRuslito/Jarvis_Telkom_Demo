@@ -7,7 +7,7 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loggedAccount, setLoggedAccount] = useState(null)
 
-  const baseUrl = "http://localhost:5000/account";
+  const baseUrl =  `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/account`;
 
   const handleLogin = async (e) => {
     e.preventDefault(); 

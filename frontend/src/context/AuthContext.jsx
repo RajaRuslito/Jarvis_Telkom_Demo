@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post("http://localhost:5000/account/login", {
+            const response = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/account/login`, {
                 email,
                 password,
             });
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await axios.post("http://localhost:5000/account/logout");
+            await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/account/logout`);
             localStorage.removeItem("authToken");
             setIsAuthenticated(false);
             setUser(null);

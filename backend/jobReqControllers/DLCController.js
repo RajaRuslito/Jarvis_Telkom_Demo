@@ -5,9 +5,9 @@ const xlsx = require("xlsx");
 const path = require("path");
 const fs = require("fs");
 
-// Create Mission Statement
+// Create DLC
 /**
- * Creates a new mission statement or updates an existing one.
+ * Creates a new DLC or updates an existing one.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
@@ -30,7 +30,7 @@ async function createDLC(req, res) {
         let result;
 
         if (existingJob.rows.length > 0) {
-            // Update existing mission statement if job_id exists.
+            // Update existing DLC if job_id exists.
             const updateQuery = `
                 UPDATE dlc
                 SET nama_job = $1, deskripsi = $2
@@ -40,7 +40,7 @@ async function createDLC(req, res) {
             result = await pool.query(updateQuery, [nama_job, deskripsi, job_id]);
             operation = "updated";
         } else {
-            // Insert a new mission statement if job_id does not exist.
+            // Insert a new DLC if job_id does not exist.
             const insertQuery = `
                 INSERT INTO dlc (job_id, nama_job, deskripsi)
                 VALUES ($1, $2, $3)
@@ -51,15 +51,15 @@ async function createDLC(req, res) {
         }
 
         // Respond with success message.
-        console.log(`✅ Mission statement ${operation} for job_id: ${job_id}`);
+        console.log(`✅ DLC ${operation} for job_id: ${job_id}`);
         res.status(201).json({
             success: true,
-            message: `Mission statement ${operation} successfully`,
+            message: `DLC ${operation} successfully`,
             data: result.rows[0],
         });
     } catch (error) {
         // Handle errors during the database operation.
-        console.error("Error creating mission statement:", error.message);
+        console.error("Error creating DLC:", error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -152,7 +152,7 @@ async function downloadXLSX(req, res) {
         // Convert the retrieved data into a worksheet.
         const worksheet = xlsx.utils.json_to_sheet(result.rows);
         const workbook = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(workbook, worksheet, "MissionStatements");
+        xlsx.utils.book_append_sheet(workbook, worksheet, "DLC");
 
         // Define the file path for the generated XLSX file.
         const filePath = path.join(__dirname, "../downloads/dlcs.xlsx");
@@ -180,9 +180,9 @@ async function downloadXLSX(req, res) {
     }
 }
 
-// Update Mission Statement
+// Update DLC
 /**
- * Updates an existing mission statement by its obj_id.
+ * Updates an existing DLC by its obj_id.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
@@ -197,7 +197,7 @@ async function DLCUpdate(req, res) {
     }
 
     try {
-        // Update the mission statement in the database.
+        // Update the DLC in the database.
         const result = await pool.query(
             `UPDATE dlc 
              SET nama_job = $1, deskripsi = $2 
@@ -206,38 +206,38 @@ async function DLCUpdate(req, res) {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Mission statement not found" });
+            return res.status(404).json({ error: "DLC not found" });
         } else {
             res.json(result.rows[0]);
         }
     } catch (error) {
         // Handle errors during the update operation.
-        console.error("Error updating mission statement:", error);
-        res.status(500).json({ error: "Error updating mission statement" });
+        console.error("Error updating DLC:", error);
+        res.status(500).json({ error: "Error updating DLC" });
     }
 }
 
-// Get All Mission Statements
+// Get All DLCs
 /**
- * Fetches all mission statements from the database.
+ * Fetches all DLCs from the database.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
 async function getAllDLC(req, res) {
     try {
-        // Fetch all mission statements.
+        // Fetch all DLCs.
         const result = await pool.query(`SELECT * FROM dlc`);
         res.json(result.rows);
     } catch (error) {
         // Handle errors during data fetching.
-        console.error("Error getting mission statements:", error);
-        res.status(500).json({ error: "Error getting mission statements" });
+        console.error("Error getting DLCs:", error);
+        res.status(500).json({ error: "Error getting DLCs" });
     }
 }
 
-// Get Mission Statement by ID
+// Get DLC by ID
 /**
- * Fetches a specific mission statement by its job_id.
+ * Fetches a specific DLC by its job_id.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
@@ -245,23 +245,23 @@ async function getDLCById(req, res) {
     const { job_id } = req.params;
 
     try {
-        // Fetch mission statement by job_id.
+        // Fetch DLC by job_id.
         const result = await pool.query(`SELECT * FROM dlc WHERE job_id = $1`, [job_id]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Mission statement not found" });
+            return res.status(404).json({ error: "DLC not found" });
         }
         res.json(result.rows[0]);
     } catch (error) {
         // Handle errors during the data retrieval.
-        console.error("Error getting mission statement by ID:", error);
-        res.status(500).json({ error: "Error getting mission statement by ID" });
+        console.error("Error getting DLC by ID:", error);
+        res.status(500).json({ error: "Error getting DLC by ID" });
     }
 }
 
-// Delete Mission Statement
+// Delete DLC
 /**
- * Deletes a mission statement by its obj_id.
+ * Deletes a DLC by its obj_id.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
@@ -269,26 +269,26 @@ async function deleteDLC(req, res) {
     const { obj_id } = req.params;
 
     try {
-        // Delete the mission statement.
+        // Delete the DLC.
         const result = await pool.query(
             "DELETE FROM dlc WHERE obj_id = $1 RETURNING *",
             [obj_id]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Mission Statement not found" });
+            return res.status(404).json({ error: "DLC not found" });
         }
-        res.json({ message: "Mission Statement deleted successfully" });
+        res.json({ message: "DLC deleted successfully" });
     } catch (error) {
         // Handle errors during the delete operation.
-        console.error("Error deleting mission statement:", error);
-        res.status(500).json({ error: "Error deleting mission statement" });
+        console.error("Error deleting DLC:", error);
+        res.status(500).json({ error: "Error deleting DLC" });
     }
 }
 
 // Download Template XLSX
 /**
- * Downloads a template XLSX file for mission statements.
+ * Downloads a template XLSX file for DLCs.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
@@ -332,9 +332,9 @@ async function downloadTemplateXLSX(req, res) {
     }
 }
 
-// Search Mission Statements
+// Search DLCs
 /**
- * Searches for mission statements based on a query string.
+ * Searches for DLCs based on a query string.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
@@ -342,7 +342,7 @@ async function searchDLC(req, res) {
     const { search } = req.query;
 
     try {
-        // Search mission statements based on the query.
+        // Search DLCs based on the query.
         const result = await pool.query(
             `SELECT * FROM dlc WHERE 
             CAST(job_id AS TEXT) ILIKE $1 OR 
@@ -352,14 +352,14 @@ async function searchDLC(req, res) {
         );
 
         if (result.rows.length === 0) {
-            res.status(404).json({ error: 'No matching Mission Statement found' });
+            res.status(404).json({ error: 'No matching DLC found' });
         } else {
             res.json(result.rows);
         }
     } catch (error) {
         // Handle errors during the search operation.
-        console.error('Error fetching Mission Statement:', error);
-        res.status(500).json({ error: 'Error fetching Mission Statement' });
+        console.error('Error fetching DLC:', error);
+        res.status(500).json({ error: 'Error fetching DLC' });
     }
 }
 
