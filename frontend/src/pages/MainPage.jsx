@@ -6,6 +6,8 @@ import axios from 'axios';
 import profile from '../assets/profile.png'
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -77,6 +79,7 @@ const MainPage = () => {
   }
 
 
+
   useEffect(() => {
     const fetchData = async () => {
       if (!activeMenu.endpoint) return;
@@ -127,27 +130,85 @@ const MainPage = () => {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobdesc/${activeMenu.endpoint}/upload-xlsx`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Step 1: Send file for conflict checking first
+      const checkResponse = await axios.post(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobdesc/${activeMenu.endpoint}/check-conflict`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      const { conflictingJobIds, totalConflicts } = checkResponse.data;
+
+      // Step 2: Show confirmation popup with properly formatted Job IDs
+      confirmAlert({
+        title: "File Upload Conflict",
+        message: (
+          <div>
+            <p>Found {totalConflicts} conflicts.</p>
+            <p><strong>Conflicting Job IDs:</strong></p>
+            <ul>
+              {conflictingJobIds.map((id, index) => (
+                <li key={index}>{id}</li>
+              ))}
+            </ul>
+            <p>Do you want to overwrite or update them?</p>
+          </div>
+        ),
+        buttons: [
+          {
+            label: "Overwrite (Delete All & Insert New)",
+            onClick: async () => {
+              await proceedWithUpload("overwrite", formData);
+            },
+          },
+          {
+            label: "Update (Modify Existing & Insert New)",
+            onClick: async () => {
+              await proceedWithUpload("update", formData);
+            },
+          },
+        ],
       });
 
-      const { message, deleted, inserted } = response.data;
+    } catch (error) {
+      console.error("Error checking conflicts:", error.message);
+      toast.error(error.response?.data?.error || "Failed to check conflicts");
+    }
+  };
 
-      // Trigger notifications
+
+
+  // Function to proceed with user's choice
+  const proceedWithUpload = async (mode, formData) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobdesc/${activeMenu.endpoint}/upload-xlsx?mode=${mode}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      const { message, deleted, updated, inserted } = response.data;
+
+      // Trigger notifications based on action taken
       toast.success(`${message}`);
       if (deleted > 0) {
         toast.info(`${deleted} entries deleted.`);
+      }
+      if (updated > 0) {
+        toast.info(`${updated} entries updated.`);
       }
       if (inserted > 0) {
         toast.success(`${inserted} entries inserted.`);
       }
     } catch (error) {
       console.error('Error uploading file:', error.message);
-      alert(error.response?.data?.error || 'Failed to upload the file');
+      toast.error(error.response?.data?.error || 'Failed to upload the file');
     }
   };
+
+
 
   const [jobs, setJobs] = useState([]);
 
@@ -264,7 +325,7 @@ const MainPage = () => {
 
   return (
     <>
-    <ToastContainer />
+      <ToastContainer />
       <header className="bg-white shadow flex items-center justify-between py-4 px-6">
         {/* Left: Title */}
         <h1
@@ -442,6 +503,7 @@ const MainPage = () => {
                   <table className='w-full table-auto border-collapse'>
                     <thead className='bg-gray-300'>
                       <tr>
+                        {/*on this table, can you help me make a sort function, asc and desc*/}
                         <th className='px-4 py-2 border-b text-left font-semibold'>No.</th>
                         {accountData?.roles !== 'User' && (
                           <th className='px-4 py-2 border-b text-left font-semibold'>Action</th>

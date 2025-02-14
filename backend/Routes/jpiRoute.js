@@ -10,6 +10,7 @@ const {
   downloadXLSX,
   downloadTemplateXLSX,
   searchJPI,
+  checkConflictXLSX,
   upload
 } = require('../jobDescControllers/jpiController');
 
@@ -50,5 +51,8 @@ router.get('/all/download-template', downloadTemplateXLSX);
 router.get("/all/search", uploadMiddleware, async (req, res) => {
    await searchJPI(req, res);
 });
+
+router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
+
 
 module.exports = router;

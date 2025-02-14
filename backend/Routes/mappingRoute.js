@@ -10,6 +10,7 @@ const {
     downloadMappingJobXLSX,
     downloadTemplateMappingJobXLSX,
     searchMappingJob,
+    checkConflictXLSX,
     upload
 } = require('../jobController/mappingJobController');
 
@@ -50,5 +51,7 @@ router.get('/all/download-template', downloadTemplateMappingJobXLSX);
 router.post("/all/search", uploadMiddleware, async (req, res) => {
    await searchMappingJob(req, res);
 });
+
+router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
 
 module.exports = router;

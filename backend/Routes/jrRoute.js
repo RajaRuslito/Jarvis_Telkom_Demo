@@ -10,6 +10,7 @@ const {
   downloadXLSX,
   downloadTemplateXLSX,
   searchJR,
+  checkConflictXLSX,
   upload
 } = require('../jobDescControllers/jrController');
 
@@ -50,5 +51,7 @@ router.get('/all/download-template', downloadTemplateXLSX);
 router.post("/all/search", uploadMiddleware, async (req, res) => {
    await searchJR(req, res);
 });
+
+router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
 
 module.exports = router;

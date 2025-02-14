@@ -62,7 +62,7 @@ const CreateEntryModalJob = ({ activeItem, onClose, idAvailable }) => {
 
         try {
             const response = await axios.post(
-                `http://localhost:5000/job/${activeItem.endpoint}/create`,
+                `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/job/${activeItem.endpoint}/create`,
                 newEntry[endpoint]
             );
 

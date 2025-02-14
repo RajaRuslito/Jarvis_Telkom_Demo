@@ -64,60 +64,160 @@ async function uploadXLSX(req, res) {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
+        const mode = req.query.mode;
         const filePath = req.file.path;
         const workbook = xlsx.readFile(filePath);
         const sheetName = workbook.SheetNames[0];
         const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
+        if (data.length === 0) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ error: "The uploaded file is empty" });
+        }
+
+        let updatedCount = 0;
         let deletedCount = 0;
         let insertedCount = 0;
 
-        const jobIds = [...new Set(data.map(row => row.job_id))]; // Extract unique job_ids
+        if (mode === "overwrite") {
+            // Delete all existing records before inserting new data
+            const deleteQuery = `DELETE FROM create_job RETURNING *;`;
+            const deleteResult = await pool.query(deleteQuery);
+            deletedCount = deleteResult.rowCount;
+            console.log(`🗑️ Deleted ${deletedCount} existing create_job records.`);
+        }
 
-        for (const jobId of jobIds) {
-            // Check if job_id exists
-            const checkQuery = `SELECT COUNT(*) FROM create_job WHERE job_id = $1`;
-            const { rows } = await pool.query(checkQuery, [jobId]);
+        const jobIds = [...new Set(data.map(row => row.job_id).filter(job_id => job_id))]; // Extract unique job_ids
 
-            if (parseInt(rows[0].count) > 0) {
-                // Delete all existing entries for this job_id
-                const deleteQuery = `DELETE FROM create_job WHERE job_id = $1 RETURNING *`;
-                const deletedRows = await pool.query(deleteQuery, [jobId]);
-                deletedCount += deletedRows.rowCount;
-                console.log(`Deleted ${deletedRows.rowCount} entries for job_id: ${jobId}`);
+        if (jobIds.length === 0) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ error: "No valid job_id found in the file." });
+        }
+
+        if (mode === "update") {
+            // Fetch existing job_auth records in bulk
+            const placeholders = jobIds.map((_, i) => `$${i + 1}`).join(", ");
+            const existingRecordsQuery = `SELECT * FROM create_job WHERE job_id IN (${placeholders})`;
+            const existingRecordsResult = await pool.query(existingRecordsQuery, jobIds);
+
+            // Convert existing records into a map for quick lookup
+            const existingRecordsMap = new Map();
+            existingRecordsResult.rows.forEach(record => {
+                existingRecordsMap.set(record.job_id, record);
+            });
+
+            for (const row of data) {
+                if (!row.job_id || !row.nama_job || !row.job_prefix || !row.company_code || !row.band || !row.flag_mgr) {
+                    console.error("Skipping row due to missing fields:", row);
+                    continue;
+                }
+
+                const existingRecord = existingRecordsMap.get(row.job_id);
+
+                if (existingRecord) {
+                    if (
+                        existingRecord.nama_job !== row.nama_job ||
+                        existingRecord.job_prefix !== row.job_prefix ||
+                        existingRecord.company_code !== row.company_code ||
+                        existingRecord.band !== row.band ||
+                        existingRecord.flag_mgr !== row.flag_mgr
+                    ) {
+                        // Update existing record
+                        const updateQuery = `
+                            UPDATE create_job 
+                            SET nama_job = $1, job_prefix = $2, company_code = $3, band = $4, flag_mgr = $5
+                            WHERE job_id = $6 RETURNING *;
+                        `;
+                        await pool.query(updateQuery, [row.nama_job, row.job_prefix, row.company_code, row.band, row.flag_mgr, row.job_id]);
+                        updatedCount++;
+                    }
+                } else {
+                    // Insert new record
+                    const insertQuery = `
+                        INSERT INTO create_job (job_id, nama_job, job_prefix, company_code, band, flag_mgr)
+                        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
+                    `;
+                    await pool.query(insertQuery, [row.job_id, row.nama_job, row.job_prefix, row.company_code, row.band, row.flag_mgr]);
+                    insertedCount++;
+                }
+            }
+        } else if (mode === "overwrite") {
+            // Directly insert all records from the uploaded file
+            for (const row of data) {
+                if (!row.job_id || !row.nama_job || !row.job_prefix || !row.company_code || !row.band || !row.flag_mgr) {
+                    console.error("Skipping row due to missing fields:", row);
+                    continue;
+                }
+
+                const insertQuery = `
+                    INSERT INTO create_job (job_id, nama_job, job_prefix, company_code, band, flag_mgr)
+                    VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
+                `;
+                await pool.query(insertQuery, [row.job_id, row.nama_job, row.job_prefix, row.company_code, row.band, row.flag_mgr]);
+                insertedCount++;
             }
         }
 
-        // Insert new batch of data
-        for (const row of data) {
-            if (!row.job_id || !row.job_prefix || !row.company_code || !row.nama_job || !row.band) {
-                console.error("Skipping row due to missing fields:", row);
-                continue;
-            }
-
-            row.band = row.band.toUpperCase();
-            
-            const insertQuery = `
-                INSERT INTO create_job (job_id, job_prefix, company_code, nama_job, band, flag_mgr)
-                VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
-            `;
-            await pool.query(insertQuery, [row.job_id, row.job_prefix, row.company_code, row.nama_job, row.band, row.flag_mgr || '-']);
-            insertedCount++;
-        }
-
-        // Delete the uploaded file after processing
-        fs.unlinkSync(filePath);
+        fs.unlinkSync(filePath); // Delete the uploaded file after processing
 
         res.status(201).json({
             message: "XLSX file uploaded and data processed successfully!",
+            mode,
+            inserted: insertedCount,
+            updated: updatedCount,
             deleted: deletedCount,
-            inserted: insertedCount
         });
 
     } catch (error) {
         console.error("Error uploading XLSX:", error);
         res.status(500).json({ error: "An error occurred while processing the file" });
     }
+
+
+    //     for (const jobId of jobIds) {
+    //         // Check if job_id exists
+    //         const checkQuery = `SELECT COUNT(*) FROM create_job WHERE job_id = $1`;
+    //         const { rows } = await pool.query(checkQuery, [jobId]);
+
+    //         if (parseInt(rows[0].count) > 0) {
+    //             // Delete all existing entries for this job_id
+    //             const deleteQuery = `DELETE FROM create_job WHERE job_id = $1 RETURNING *`;
+    //             const deletedRows = await pool.query(deleteQuery, [jobId]);
+    //             deletedCount += deletedRows.rowCount;
+    //             console.log(`Deleted ${deletedRows.rowCount} entries for job_id: ${jobId}`);
+    //         }
+    //     }
+
+    //     // Insert new batch of data
+    //     for (const row of data) {
+    //         if (!row.job_id || !row.job_prefix || !row.company_code || !row.nama_job || !row.band) {
+    //             console.error("Skipping row due to missing fields:", row);
+    //             continue;
+    //         }
+
+    //         row.band = row.band.toUpperCase();
+            
+    //         const insertQuery = `
+    //             INSERT INTO create_job (job_id, job_prefix, company_code, nama_job, band, flag_mgr)
+    //             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
+    //         `;
+    //         await pool.query(insertQuery, [row.job_id, row.job_prefix, row.company_code, row.nama_job, row.band, row.flag_mgr || '-']);
+    //         insertedCount++;
+    //     }
+
+    //     // Delete the uploaded file after processing
+    //     fs.unlinkSync(filePath);
+
+    //     res.status(201).json({
+    //         message: "XLSX file uploaded and data processed successfully!",
+    //         deleted: deletedCount,
+    //         inserted: insertedCount
+    //     });
+
+    // } catch (error) {
+    //     console.error("Error uploading XLSX:", error);
+    //     res.status(500).json({ error: "An error occurred while processing the file" });
+    // }
 }
 
 
@@ -168,6 +268,95 @@ async function downloadXLSX(req, res) {
         res.status(500).json({ error: "An error occurred while generating the file" });
     }
 }
+
+/**
+ * Check for conflicts in the uploaded XLSX file before inserting/updating job_auth data.
+ * 
+ * @param {Object} req - The request object, containing the uploaded file.
+ * @param {Object} res - The response object used to send conflict details.
+ */
+async function checkConflictXLSX(req, res) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+
+        const filePath = req.file.path;
+        const workbook = xlsx.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+        if (data.length === 0) {
+            fs.unlinkSync(filePath); // Delete file after processing
+            return res.status(400).json({ error: "The uploaded file is empty" });
+        }
+
+        const jobIds = data.map(row => row.job_id).filter(job_id => job_id); // Extract job_ids, removing any undefined/null
+        const uniqueJobIds = [...new Set(jobIds)]; // Ensure uniqueness
+
+        if (uniqueJobIds.length === 0) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ error: "No valid job_id found in the file." });
+        }
+
+        // Fetch all existing job_auth records with matching job_ids
+        const placeholders = uniqueJobIds.map((_, i) => `$${i + 1}`).join(", ");
+        const query = `SELECT * FROM create_job WHERE job_id IN (${placeholders})`;
+        const existingRecords = await pool.query(query, uniqueJobIds);
+
+        let conflicts = [];
+        let conflictingJobIds = []; // Store job_ids that have conflicts
+        let totalConflicts = 0;
+
+        data.forEach(row => {
+            if (!row.job_id || !row.nama_job || !row.job_prefix || !row.company_code || !row.band || !row.flag_mgr) {
+                console.warn("Skipping row due to missing fields:", row);
+                return;
+            }
+
+            const existingRecord = existingRecords.rows.find(record => record.job_id === row.job_id);
+            if (existingRecord) {
+                // Check if the new data is different from the existing data
+                if (
+                    existingRecord.nama_job !== row.nama_job ||
+                    existingRecord.job_prefix !== row.job_prefix ||
+                    existingRecord.company_code !== row.company_code ||
+                    existingRecord.band !== row.band ||
+                    existingRecord.flag_mgr !== row.flag_mgr
+                ) {
+                    totalConflicts++;
+                    conflicts.push({
+                        job_id: row.job_id,
+                        existing: existingRecord,
+                        new: row
+                    });
+
+                    if (!conflictingJobIds.includes(row.job_id)) {
+                        conflictingJobIds.push(row.job_id);
+                    }
+                }
+            }
+        });
+
+        fs.unlinkSync(filePath); // Delete file after processing
+
+        if (totalConflicts === 0) {
+            return res.status(200).json({ hasConflict: false, message: "No conflicts detected." });
+        } else {
+            return res.status(200).json({
+                hasConflict: true,
+                totalConflicts,
+                conflictingJobIds, // List of job_ids that have conflicts
+                conflicts, // Detailed conflict information
+                message: `${totalConflicts} conflicts detected.`,
+            });
+        }
+    } catch (error) {
+        console.error("Error checking conflicts:", error);
+        res.status(500).json({ error: "An error occurred while checking conflicts" });
+    }
+}
+
 
 async function jcUpdate(req, res) {
     const obj_id = parseInt(req.params.obj_id, 10);
@@ -311,5 +500,6 @@ module.exports = {
     downloadXLSX,
     downloadTemplateXLSX,
     searchJC,
+    checkConflictXLSX,
     upload
 };
