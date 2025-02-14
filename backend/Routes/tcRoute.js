@@ -10,6 +10,7 @@ const {
   downloadXLSX,
   downloadTemplateXLSX,
   searchTC,
+  checkConflictXLSX,
   upload
 } = require('../jobReqControllers/techCompController');
 
@@ -50,5 +51,7 @@ router.get('/all/download-template', downloadTemplateXLSX);
 router.post("/all/search", uploadMiddleware, async (req, res) => {
    await searchTC(req, res);
 });
+
+router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
 
 module.exports = router;

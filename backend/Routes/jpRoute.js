@@ -10,7 +10,8 @@ const {
   downloadXLSX,
   downloadTemplateXLSX,
   searchJP,
-  upload
+  upload,
+  checkConflictXLSX
 } = require('../jobReqControllers/prereqController');
 
 const router = express.Router();
@@ -50,5 +51,7 @@ router.get('/all/download-template', downloadTemplateXLSX);
 router.post("/all/search", uploadMiddleware, async (req, res) => {
    await searchJP(req, res);
 });
+
+router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
 
 module.exports = router;

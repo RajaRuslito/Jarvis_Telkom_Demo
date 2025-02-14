@@ -7,6 +7,8 @@ import profile from '../assets/profile.png'
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const MainPage = () => {
 
@@ -128,23 +130,76 @@ const MainPage = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/upload-xlsx`, formData, {
+      const checkResponse = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/check-conflict`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const { message, deleted, inserted } = response.data;
+      const { conflictingJobIds, totalConflicts } = checkResponse.data;
 
-      // Trigger notifications
+      // Step 2: Show confirmation popup with properly formatted Job IDs
+      confirmAlert({
+        title: "File Upload Conflict",
+        message: (
+          <div>
+            <p>Found {totalConflicts} conflicts.</p>
+            <p><strong>Conflicting Job IDs:</strong></p>
+            <ul>
+              {conflictingJobIds.map((job_id, index) => (
+                <li key={index}>{job_id}</li>
+              ))}
+            </ul>
+            <p>Do you want to overwrite or update them?</p>
+          </div>
+        ),
+        buttons: [
+          {
+            label: "Overwrite (Delete All & Insert New)",
+            onClick: async () => {
+              await proceedWithUpload("overwrite", formData);
+            },
+          },
+          {
+            label: "Update (Modify Existing & Insert New)",
+            onClick: async () => {
+              await proceedWithUpload("update", formData);
+            },
+          },
+        ],
+      });
+
+    } catch (error) {
+      console.error("Error checking conflicts:", error.message);
+      toast.error(error.response?.data?.error || "Failed to check conflicts");
+    }
+  };
+
+
+
+  // Function to proceed with user's choice
+  const proceedWithUpload = async (mode, formData) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobreq/${activeMenu.endpoint}/upload-xlsx?mode=${mode}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      const { message, deleted, updated, inserted } = response.data;
+
+      // Trigger notifications based on action taken
       toast.success(`${message}`);
       if (deleted > 0) {
         toast.info(`${deleted} entries deleted.`);
+      }
+      if (updated > 0) {
+        toast.info(`${updated} entries updated.`);
       }
       if (inserted > 0) {
         toast.success(`${inserted} entries inserted.`);
       }
     } catch (error) {
       console.error('Error uploading file:', error.message);
-      alert(error.response?.data?.error || 'Failed to upload the file');
+      toast.error(error.response?.data?.error || 'Failed to upload the file');
     }
   };
 
