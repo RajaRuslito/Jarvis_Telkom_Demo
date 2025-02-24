@@ -4,8 +4,8 @@ const DeleteModal = ({ entryData, activeItem, onClose }) => {
 
   const handleDelete = async () => {
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobdesc/${activeItem.endpoint}/${entryData.obj_id}/delete`
+      const response = await axios.put(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/jobdesc/${activeItem.endpoint}/${entryData.obj_id}/alter`
       );
 
       if (response.status === 200) {

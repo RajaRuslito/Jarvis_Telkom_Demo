@@ -493,6 +493,29 @@ async function searchJA(req, res) {
     }
 }
 
+async function alterJA(req, res) {
+    const { obj_id } = req.params; // Extract job_id from request parameters
+
+    try {
+        // Update the status to 'Non-Active' where job_id matches
+        const result = await pool.query(
+            'UPDATE job_auth SET status = $1 WHERE obj_id = $2 RETURNING *',
+            ['Non-Active', obj_id]
+        );
+
+        if (result.rows.length === 0) {
+            // If no rows were updated, the job_id doesn't exist
+            res.status(404).json({ error: 'Job not found' });
+        } else {
+            // Successfully updated
+            res.json({ message: 'Job status updated to Non-Active', job: result.rows[0] });
+        }
+    } catch (error) {
+        console.error('Error updating job status:', error);
+        res.status(500).json({ error: 'Error updating job status' });
+    }
+}
+
 module.exports = {
     createJA,
     jaUpdate,
@@ -504,5 +527,6 @@ module.exports = {
     downloadTemplateXLSX,
     searchJA,
     checkConflictXLSX,
+    alterJA,
     upload
 };

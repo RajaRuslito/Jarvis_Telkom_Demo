@@ -185,54 +185,7 @@ async function uploadMappingJobXLSX(req, res) {
         console.error("Error uploading XLSX:", error);
         res.status(500).json({ error: "An error occurred while processing the file" });
     }
-    //     // Iterate through each row in the XLSX file.
-    //     for (const row of data) {
-    //         // Skip rows with missing required fields.
-    //         if (!row.job_id || !row.company_code || !row.short_posisi || !row.obid_posisi || !row.nama_pemangku || !row.nik_pemangku) {
-    //             console.error("Skipping row due to missing fields:", row);
-    //             continue;
-    //         }
-
-    //         // Check if the job_id exists in the database.
-    //         const checkQuery = `SELECT * FROM mapping_job WHERE job_id = $1`;
-    //         const existingJob = await pool.query(checkQuery, [parseInt(row.job_id)]);
-
-    //         if (existingJob.rows.length > 0) {
-    //             // If job_id exists, update the record.
-    //             const updateQuery = `
-    //                 UPDATE mapping_job
-    //                 SET company_code = $1, short_posisi = $2, obid_posisi = $3, nama_pemangku = $4, nik_pemangku = $5
-    //                 WHERE job_id = $6 RETURNING *;
-    //             `;
-    //             await pool.query(updateQuery, [row.company_code, row.short_posisi, row.obid_posisi, row.nama_pemangku, row.nik_pemangku, row.job_id]);
-    //             console.log(`Updated job_id: ${row.job_id}`);
-    //             updatedCount++;
-    //         } else {
-    //             // If job_id does not exist, insert a new record.
-    //             const insertQuery = `
-    //                 INSERT INTO mapping_job (job_id, company_code, short_posisi, obid_posisi, nama_pemangku, nik_pemangku)
-    //                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
-    //             `;
-    //             await pool.query(insertQuery, [parseInt(row.job_id), row.company_code, row.short_posisi, row.obid_posisi, row.nama_pemangku, row.nik_pemangku]);
-    //             console.log(`Inserted new job_id: ${row.job_id}`);
-    //             insertedCount++;
-    //         }
-    //     }
-
-    //     // Delete the uploaded file after processing.
-    //     fs.unlinkSync(filePath);
-
-    //     // Respond with the counts of inserted and updated records.
-    //     res.status(201).json({
-    //         message: "XLSX file uploaded and data inserted successfully!",
-    //         inserted: insertedCount,
-    //         updated: updatedCount
-    //     });
-    // } catch (error) {
-    //     // Handle errors during the file processing or database operations.
-    //     console.error("Error uploading XLSX:", error);
-    //     res.status(500).json({ error: "An error occurred while processing the file" });
-    // }
+    
 }
 
 /**
@@ -551,6 +504,30 @@ async function deleteMappingJob(req, res) {
     }
 }
 
+async function alterMJ(req, res) {
+    const { obj_id } = req.params; // Extract job_id from request parameters
+
+    try {
+        // Update the status to 'Non-Active' where job_id matches
+        const result = await pool.query(
+            'UPDATE mapping_job SET status = $1 WHERE obj_id = $2 RETURNING *',
+            ['Non-Active', obj_id]
+        );
+
+        if (result.rows.length === 0) {
+            // If no rows were updated, the job_id doesn't exist
+            res.status(404).json({ error: 'Job not found' });
+        } else {
+            // Successfully updated
+            res.json({ message: 'Job status updated to Non-Active', job: result.rows[0] });
+        }
+    } catch (error) {
+        console.error('Error updating job status:', error);
+        res.status(500).json({ error: 'Error updating job status' });
+    }
+}
+
+
 module.exports = {
     createMappingJob,
     updateMappingJob,
@@ -562,5 +539,6 @@ module.exports = {
     downloadTemplateMappingJobXLSX,
     searchMappingJob,
     checkConflictXLSX,
+    alterMJ,
     upload
 };

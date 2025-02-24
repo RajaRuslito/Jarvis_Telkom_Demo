@@ -11,7 +11,8 @@ const {
   downloadTemplateXLSX,
   searchJA,
   checkConflictXLSX,
-  upload
+  upload,
+  alterJA
 } = require('../jobDescControllers/jaController');
 
 const router = express.Router();
@@ -53,5 +54,9 @@ router.post("/all/search", uploadMiddleware, async (req, res) => {
 });
 
 router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
+
+router.put("/:obj_id/alter", async (req, res) => {
+   await alterJA(req, res);
+});
 
 module.exports = router;

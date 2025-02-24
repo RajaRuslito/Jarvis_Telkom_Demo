@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import UserProfile from "./pages/UserProfile";
 import JobMain from "./pages/JobMain";
 import JobRequirement from "./pages/JobRequirement";
+import Dashboard from "./pages/DB";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path='/job' element={<JobMain />} />
         <Route path='/jobreq' element={<JobRequirement />} />
         <Route path='/profile' element={<UserProfile />} />
+        <Route path='/dashboard' element={<Dashboard />} />
       </Routes>
     </Router>
   );

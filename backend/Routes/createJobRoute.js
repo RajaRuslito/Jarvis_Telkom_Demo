@@ -11,6 +11,7 @@ const {
   downloadTemplateXLSX,
   searchJC,
   checkConflictXLSX,
+  alterCJ,
   upload
 } = require('../jobController/createJobController');
 
@@ -55,5 +56,9 @@ router.post("/all/search", uploadMiddleware, async (req, res) => {
 });
 
 router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
+
+router.put("/:obj_id/alter", async (req, res) => {
+   await alterCJ(req, res);
+});
 
 module.exports = router;

@@ -34,13 +34,14 @@ app.use('/jobdesc/ja', jaRoute);
 app.use('/jobdesc/jpi', jpiRoute);
 app.use('/jobdesc/jr', jrRoute);
 app.use('/jobdesc/ms', msRoute);
-app.use('/account', accountRoute);
 app.use('/job/cj', cjRoute);
 app.use('/job/mj', mjRoute);
 app.use('/jobreq/tc', tcRoute);
 app.use('/jobreq/dlc', dlcRoute);
 app.use('/jobreq/jp', jpRoute);
 app.use('/jobreq/vb', vbRoute);
+
+app.use('/account', accountRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

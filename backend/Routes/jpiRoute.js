@@ -11,7 +11,8 @@ const {
   downloadTemplateXLSX,
   searchJPI,
   checkConflictXLSX,
-  upload
+  upload,
+  alterJPI
 } = require('../jobDescControllers/jpiController');
 
 const router = express.Router();
@@ -54,5 +55,8 @@ router.get("/all/search", uploadMiddleware, async (req, res) => {
 
 router.post("/check-conflict", upload.single("file"), checkConflictXLSX);
 
+router.put("/:obj_id/alter", async (req, res) => {
+   await alterJPI(req, res);
+});
 
 module.exports = router;
