@@ -57,9 +57,11 @@ const MainPage = () => {
   // Filter data by search term
   const filteredData = data.filter(
     (item) =>
-      item.job_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.nama_job.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
+      item.status === 'Active' && (
+        item.job_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.nama_job.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
+    )  
   );
 
   const currentData = filteredData.slice(
